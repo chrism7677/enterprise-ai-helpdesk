@@ -1,55 +1,50 @@
-# ==========================
-# Node / React
-# ==========================
+# -----------------------------
+# React
+# -----------------------------
 frontend/node_modules/
 frontend/dist/
 frontend/.vite/
 
-# ==========================
+# -----------------------------
 # Python
-# ==========================
+# -----------------------------
 backend/.venv/
-backend/__pycache__/
-backend/.pytest_cache/
-backend/.mypy_cache/
-backend/.coverage
-backend/htmlcov/
+.venv/
+venv/
 
-# Python bytecode
+__pycache__/
 *.py[cod]
-*.pyo
+*.pyd
 
-# ==========================
-# Environment files
-# ==========================
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+.coverage
+htmlcov/
+coverage/
+
+# -----------------------------
+# Environment
+# -----------------------------
 .env
 .env.*
 !.env.example
 
-# ==========================
-# VS Code
-# ==========================
+# -----------------------------
+# IDEs
+# -----------------------------
 .vscode/
+.idea/
 
-# ==========================
-# OS files
-# ==========================
-.DS_Store
-Thumbs.db
-
-# ==========================
+# -----------------------------
 # Logs
-# ==========================
+# -----------------------------
 *.log
 
-# ==========================
-# Alembic (optional)
-# ==========================
-# Uncomment if you generate local migration cache files
-# backend/alembic/__pycache__/
-
-# ==========================
-# Misc
-# ==========================
-coverage/
+# -----------------------------
+# OS
+# -----------------------------
+.DS_Store
+Thumbs.db
 
