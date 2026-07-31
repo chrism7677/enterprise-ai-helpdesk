@@ -1,11 +1,12 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.api.services import ticket_service
 from app.db.database import get_db
+from app.db.models import User
 from app.schemas.ticket import TicketCreate, TicketResponse
+from app.services import ticket_service
 
 router = APIRouter(prefix="/tickets", tags=["tickets"])
 
@@ -23,6 +24,12 @@ def create_ticket(
     ticket: TicketCreate,
     db: DatabaseSession,
 ) -> TicketResponse:
+    if db.get(User, ticket.requester_id) is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Requester not found",
+        )
+
     created_ticket = ticket_service.create_ticket(db, ticket)
     return TicketResponse.model_validate(created_ticket)
 

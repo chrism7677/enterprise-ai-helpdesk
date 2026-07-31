@@ -4,7 +4,7 @@ import pytest
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
-from app.api.services import ticket_service
+from app.services import ticket_service
 from app.schemas.ticket import TicketCreate
 
 

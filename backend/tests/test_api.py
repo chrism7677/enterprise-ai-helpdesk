@@ -58,3 +58,21 @@ async def test_create_ticket_rejects_invalid_data(
     )
 
     assert response.status_code == 422
+
+
+async def test_create_ticket_rejects_unknown_requester(
+    client: AsyncClient,
+) -> None:
+    response = await client.post(
+        "/tickets",
+        json={
+            "title": "Cannot connect to VPN",
+            "description": "The VPN client times out during connection.",
+            "category": "network",
+            "priority": "high",
+            "requester_id": 999,
+        },
+    )
+
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Requester not found"}
