@@ -1,7 +1,7 @@
 #SQLAlchemy database setup
 #DeclarativeBase is the modern SQLAlchemy declarative pattern for defining mapped classes
 
-from collections.abc import Generator
+from collections.abc import AsyncGenerator
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
@@ -25,7 +25,7 @@ SessionLocal = sessionmaker(
 )
 
 
-def get_db() -> Generator[Session, None, None]:
+async def get_db() -> AsyncGenerator[Session, None]:
     db = SessionLocal()
 
     try:
