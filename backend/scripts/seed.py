@@ -7,8 +7,8 @@
 from pwdlib import PasswordHash
 from sqlalchemy import select
 
-from app.database import SessionLocal
-from app.models import User
+from app.db.database import SessionLocal
+from app.db.models import User
 
 
 password_hash = PasswordHash.recommended()
@@ -49,4 +49,3 @@ if __name__ == "__main__":
     seed_users()
 
 #run withpython -m scripts.seed, python runs the file with __name__ set to "__main__".
-

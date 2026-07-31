@@ -12,9 +12,9 @@ from alembic import context
 
 
 #MY CODE: In alembic/env.py, import your metadata: (MORE BELOW)
-from app.config import settings
-from app.database import Base
-from app.models import Ticket, User  # noqa: F401
+from app.core.config import settings
+from app.db.database import Base
+from app.db.models import Ticket, User  # noqa: F401
 
 
 
@@ -105,7 +105,6 @@ if context.is_offline_mode():
     run_migrations_offline()
 else:
     run_migrations_online()
-
 
 
 

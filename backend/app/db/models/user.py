@@ -6,10 +6,10 @@ from typing import TYPE_CHECKING
 from sqlalchemy import CheckConstraint, DateTime, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.database import Base
+from app.db.database import Base
 
 if TYPE_CHECKING:
-    from app.models.ticket import Ticket
+    from app.db.models.ticket import Ticket
 
 
 class User(Base):
@@ -62,4 +62,3 @@ class User(Base):
         back_populates="assignee",
         foreign_keys="Ticket.assignee_id",
     )
-
