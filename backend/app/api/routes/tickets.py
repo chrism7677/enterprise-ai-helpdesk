@@ -5,13 +5,21 @@ from sqlalchemy.orm import Session
 
 from app.db.database import get_db
 from app.db.models import User
-from app.schemas.ticket import TicketClaim, TicketCreate, TicketResponse
+from app.schemas.ticket import (
+    TicketClaim,
+    TicketCreate,
+    TicketDetailResponse,
+    TicketNoteCreate,
+    TicketNoteResponse,
+    TicketResponse,
+)
 from app.services import ticket_service
 
 router = APIRouter(prefix="/tickets", tags=["tickets"])
 
 
 DatabaseSession = Annotated[Session, Depends(get_db)]
+DEMO_IT_STAFF_USER_ID = 2
 
 
 @router.post(
@@ -39,8 +47,8 @@ def list_tickets(db: DatabaseSession) -> list[TicketResponse]:
     return [TicketResponse.model_validate(ticket) for ticket in tickets]
 
 
-@router.get("/{ticket_id}", response_model=TicketResponse)
-def get_ticket(ticket_id: int, db: DatabaseSession) -> TicketResponse:
+@router.get("/{ticket_id}", response_model=TicketDetailResponse)
+def get_ticket(ticket_id: int, db: DatabaseSession) -> TicketDetailResponse:
     try:
         ticket = ticket_service.get_ticket(db, ticket_id)
     except ticket_service.TicketNotFoundError:
@@ -48,7 +56,42 @@ def get_ticket(ticket_id: int, db: DatabaseSession) -> TicketResponse:
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Ticket not found",
         ) from None
-    return TicketResponse.model_validate(ticket)
+    return TicketDetailResponse.model_validate(ticket)
+
+
+@router.post(
+    "/{ticket_id}/notes",
+    response_model=TicketNoteResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_ticket_note(
+    ticket_id: int,
+    note: TicketNoteCreate,
+    db: DatabaseSession,
+) -> TicketNoteResponse:
+    try:
+        created_note = ticket_service.create_ticket_note(
+            db,
+            ticket_id,
+            DEMO_IT_STAFF_USER_ID,
+            note,
+        )
+    except ticket_service.TicketNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Ticket not found",
+        ) from None
+    except ticket_service.NoteAuthorNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Note author not found",
+        ) from None
+    except ticket_service.InvalidNoteAuthorRoleError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Note author must be an IT staff user",
+        ) from None
+    return TicketNoteResponse.model_validate(created_note)
 
 
 @router.patch("/{ticket_id}/claim", response_model=TicketResponse)

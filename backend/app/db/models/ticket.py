@@ -15,6 +15,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.database import Base
 
 if TYPE_CHECKING:
+    from app.db.models.ticket_note import TicketNote
     from app.db.models.user import User
 
 
@@ -105,4 +106,11 @@ class Ticket(Base):
     assignee: Mapped["User | None"] = relationship(
         back_populates="assigned_tickets",
         foreign_keys=[assignee_id],
+    )
+
+    notes: Mapped[list["TicketNote"]] = relationship(
+        back_populates="ticket",
+        order_by="(TicketNote.created_at, TicketNote.id)",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )

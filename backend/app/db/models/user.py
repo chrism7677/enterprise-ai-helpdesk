@@ -8,6 +8,7 @@ from app.db.database import Base
 
 if TYPE_CHECKING:
     from app.db.models.ticket import Ticket
+    from app.db.models.ticket_note import TicketNote
 
 
 class User(Base):
@@ -59,4 +60,8 @@ class User(Base):
     assigned_tickets: Mapped[list["Ticket"]] = relationship(
         back_populates="assignee",
         foreign_keys="Ticket.assignee_id",
+    )
+
+    authored_notes: Mapped[list["TicketNote"]] = relationship(
+        back_populates="author",
     )

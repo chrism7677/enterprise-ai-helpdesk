@@ -2,8 +2,8 @@ from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
-from app.db.models import Ticket, User
-from app.schemas.ticket import TicketClaim, TicketCreate
+from app.db.models import Ticket, TicketNote, User
+from app.schemas.ticket import TicketClaim, TicketCreate, TicketNoteCreate
 
 
 class TicketNotFoundError(Exception):
@@ -16,6 +16,14 @@ class AssigneeNotFoundError(Exception):
 
 class InvalidAssigneeRoleError(Exception):
     """Raised when a proposed assignee is not an IT staff user."""
+
+
+class NoteAuthorNotFoundError(Exception):
+    """Raised when a proposed note author does not exist."""
+
+
+class InvalidNoteAuthorRoleError(Exception):
+    """Raised when a proposed note author is not an IT staff user."""
 
 
 class TicketAlreadyAssignedError(Exception):
@@ -50,6 +58,35 @@ def get_ticket(db: Session, ticket_id: int) -> Ticket:
     if ticket is None:
         raise TicketNotFoundError
     return ticket
+
+
+def create_ticket_note(
+    db: Session,
+    ticket_id: int,
+    author_id: int,
+    note_data: TicketNoteCreate,
+) -> TicketNote:
+    get_ticket(db, ticket_id)
+    author = db.get(User, author_id)
+    if author is None:
+        raise NoteAuthorNotFoundError
+    if author.role != "it_staff":
+        raise InvalidNoteAuthorRoleError
+
+    note = TicketNote(
+        ticket_id=ticket_id,
+        author_id=author.id,
+        **note_data.model_dump(),
+    )
+    try:
+        db.add(note)
+        db.commit()
+        db.refresh(note)
+    except SQLAlchemyError:
+        db.rollback()
+        raise
+
+    return note
 
 
 def claim_ticket(
