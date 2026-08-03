@@ -1,7 +1,3 @@
-
-#generated Alembic structure from running alembic init alembic in backend dir (until MY CODE below)
-#Alembic's --autogenerate feature compares SQLAlchemy metadata with the current database and 
-#creates a candidate migration. The generated migration should still be reviewed before running it.
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config
@@ -9,34 +5,16 @@ from sqlalchemy import pool
 
 from alembic import context
 
-
-
-#MY CODE: In alembic/env.py, import your metadata: (MORE BELOW)
 from app.core.config import settings
 from app.db.database import Base
 from app.db.models import Ticket, User  # noqa: F401
 
-
-
-# this is the Alembic Config object, which provides
-# access to the values within the .ini file in use.
 config = context.config
 
-# Interpret the config file for Python logging.
-# This line sets up loggers basically.
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# add your model's MetaData object here
-# for 'autogenerate' support
-# from myapp import mymodel
-# target_metadata = mymodel.Base.metadata
 target_metadata = None
-
-# other values from the config, defined by the needs of env.py,
-# can be acquired:
-# my_important_option = config.get_main_option("my_important_option")
-# ... etc.
 
 
 def run_migrations_offline() -> None:
@@ -85,7 +63,6 @@ def run_migrations_online() -> None:
             context.run_migrations()
 
 
-#MY CODE CONTINUED: In alembic/env.py, import your metadata:
 config = context.config
 
 config.set_main_option(
@@ -98,13 +75,8 @@ if config.config_file_name is not None:
 
 target_metadata = Base.metadata
 
-
-
-#FROM alembic init alembic in backend folder
 if context.is_offline_mode():
     run_migrations_offline()
 else:
     run_migrations_online()
-
-
 

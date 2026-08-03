@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.db.database import Base, get_db
-from app.db.models import User
+from app.db.models import Ticket, User
 from app.main import app
 
 
@@ -26,20 +26,51 @@ def db_session() -> Generator[Session, None, None]:
     Base.metadata.create_all(engine)
 
     with TestingSessionLocal() as session:
-        session.add(
-            User(
-                id=1,
-                email="employee@example.com",
-                name="Demo Employee",
-                password_hash="not-used-in-api-tests",
-                role="employee",
-            )
+        session.add_all(
+            [
+                User(
+                    id=1,
+                    email="employee@example.com",
+                    name="Demo Employee",
+                    password_hash="not-used-in-api-tests",
+                    role="employee",
+                ),
+                User(
+                    id=2,
+                    email="it.staff@example.com",
+                    name="Demo IT Staff",
+                    password_hash="not-used-in-api-tests",
+                    role="it_staff",
+                ),
+                User(
+                    id=3,
+                    email="other.it.staff@example.com",
+                    name="Other IT Staff",
+                    password_hash="not-used-in-api-tests",
+                    role="it_staff",
+                ),
+            ]
         )
         session.commit()
         yield session
 
     Base.metadata.drop_all(engine)
     engine.dispose()
+
+
+@pytest.fixture
+def ticket(db_session: Session) -> Ticket:
+    ticket = Ticket(
+        title="Cannot connect to VPN",
+        description="The VPN client times out during connection.",
+        category="network",
+        priority="high",
+        requester_id=1,
+    )
+    db_session.add(ticket)
+    db_session.commit()
+    db_session.refresh(ticket)
+    return ticket
 
 
 @pytest.fixture

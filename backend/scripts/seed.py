@@ -1,9 +1,3 @@
-
-#For Phase 1, create:
-#employee@example.com
-#itstaff@example.com
-
-
 from pwdlib import PasswordHash
 from sqlalchemy import select
 
@@ -47,5 +41,3 @@ def seed_users() -> None:
 
 if __name__ == "__main__":
     seed_users()
-
-#run withpython -m scripts.seed, python runs the file with __name__ set to "__main__".

@@ -1,6 +1,3 @@
-#SQLAlchemy database setup
-#DeclarativeBase is the modern SQLAlchemy declarative pattern for defining mapped classes
-
 from collections.abc import AsyncGenerator
 
 from sqlalchemy import create_engine

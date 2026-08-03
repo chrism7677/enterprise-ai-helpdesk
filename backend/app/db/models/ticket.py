@@ -1,5 +1,3 @@
-#Ticket model
-
 from datetime import datetime
 from typing import TYPE_CHECKING
 

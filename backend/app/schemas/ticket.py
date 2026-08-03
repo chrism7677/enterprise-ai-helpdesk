@@ -12,6 +12,10 @@ class TicketCreate(BaseModel):
     requester_id: int = Field(gt=0)
 
 
+class TicketClaim(BaseModel):
+    assignee_id: int = Field(gt=0)
+
+
 class TicketResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
