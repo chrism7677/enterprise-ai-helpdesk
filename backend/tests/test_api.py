@@ -1,5 +1,8 @@
 import pytest
 from httpx import AsyncClient
+from sqlalchemy.orm import Session
+
+from app.db.models import Ticket
 
 pytestmark = pytest.mark.anyio
 
@@ -76,3 +79,43 @@ async def test_create_ticket_rejects_unknown_requester(
 
     assert response.status_code == 404
     assert response.json() == {"detail": "Requester not found"}
+
+
+async def test_ticket_queue_can_be_filtered_by_requester(
+    client: AsyncClient,
+    db_session: Session,
+) -> None:
+    db_session.add_all(
+        [
+            Ticket(
+                title="Employee ticket",
+                description="Requested by the demo employee.",
+                category="software",
+                priority="medium",
+                requester_id=1,
+            ),
+            Ticket(
+                title="Different requester ticket",
+                description="Requested by another existing user.",
+                category="hardware",
+                priority="low",
+                requester_id=2,
+            ),
+        ]
+    )
+    db_session.commit()
+
+    unfiltered_response = await client.get("/tickets")
+    filtered_response = await client.get(
+        "/tickets", params={"requester_id": 1}
+    )
+
+    assert unfiltered_response.status_code == 200
+    assert [ticket["title"] for ticket in unfiltered_response.json()] == [
+        "Employee ticket",
+        "Different requester ticket",
+    ]
+    assert filtered_response.status_code == 200
+    assert [ticket["title"] for ticket in filtered_response.json()] == [
+        "Employee ticket"
+    ]

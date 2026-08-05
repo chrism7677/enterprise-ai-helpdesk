@@ -48,8 +48,13 @@ def create_ticket(db: Session, ticket_data: TicketCreate) -> Ticket:
     return ticket
 
 
-def list_tickets(db: Session) -> list[Ticket]:
+def list_tickets(
+    db: Session,
+    requester_id: int | None = None,
+) -> list[Ticket]:
     statement = select(Ticket).order_by(Ticket.created_at, Ticket.id)
+    if requester_id is not None:
+        statement = statement.where(Ticket.requester_id == requester_id)
     return list(db.scalars(statement).all())
 
 

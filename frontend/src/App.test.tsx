@@ -33,6 +33,7 @@ async function completeForm() {
 
 describe('employee ticket creation', () => {
   beforeEach(() => {
+    window.history.replaceState({}, '', '/employee/tickets/new')
     mockedCreateTicket.mockReset()
   })
 

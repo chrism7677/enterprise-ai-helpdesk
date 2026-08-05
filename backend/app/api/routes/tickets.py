@@ -42,8 +42,11 @@ def create_ticket(
 
 
 @router.get("", response_model=list[TicketResponse])
-def list_tickets(db: DatabaseSession) -> list[TicketResponse]:
-    tickets = ticket_service.list_tickets(db)
+def list_tickets(
+    db: DatabaseSession,
+    requester_id: int | None = None,
+) -> list[TicketResponse]:
+    tickets = ticket_service.list_tickets(db, requester_id=requester_id)
     return [TicketResponse.model_validate(ticket) for ticket in tickets]
 
 

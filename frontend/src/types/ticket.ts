@@ -29,3 +29,15 @@ export interface TicketResponse {
   created_at: string
   updated_at: string
 }
+
+export interface WorkNoteResponse {
+  id: number
+  ticket_id: number
+  author_id: number
+  body: string
+  created_at: string
+}
+
+export interface TicketDetailsResponse extends TicketResponse {
+  notes: WorkNoteResponse[]
+}

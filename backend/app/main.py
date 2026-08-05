@@ -23,9 +23,20 @@ app.include_router(ticket_router)
 
 
 """
-Running the backend
+Startup Sequence
 
+# Navigate to backend directory
 cd backend
+
+# Start PostgreSQL
+docker compose up -d
+
+# Activate virtual environment
 source .venv/bin/activate
+
+# Apply any pending database migrations
+alembic upgrade head
+
+# Start FastAPI
 uvicorn app.main:app --reload
 """

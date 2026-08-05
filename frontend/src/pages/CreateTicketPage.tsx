@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { createTicket } from '../api/tickets'
 import { TicketForm } from '../components/TicketForm'
 import type { TicketCreateRequest, TicketResponse } from '../types/ticket'
@@ -33,6 +34,7 @@ export function CreateTicketPage() {
 
   return (
     <main className="page-shell">
+      <Link className="back-link" to="/employee/tickets">← Back to my tickets</Link>
       <header className="page-header">
         <p className="eyebrow">Employee helpdesk</p>
         <h1>Create a support ticket</h1>
@@ -49,6 +51,8 @@ export function CreateTicketPage() {
         <div className="alert alert-success" role="status">
           <strong>Ticket created successfully.</strong>
           <span> Ticket #{createdTicket.id} is {createdTicket.status.replace('_', ' ')}.</span>
+          {' '}
+          <Link to={`/employee/tickets/${createdTicket.id}`}>View ticket details</Link>
         </div>
       )}
 

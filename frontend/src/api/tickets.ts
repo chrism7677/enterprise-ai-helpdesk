@@ -1,5 +1,9 @@
 import { API_BASE_URL } from '../config'
-import type { TicketCreateRequest, TicketResponse } from '../types/ticket'
+import type {
+  TicketCreateRequest,
+  TicketDetailsResponse,
+  TicketResponse,
+} from '../types/ticket'
 
 interface ApiErrorBody {
   detail?: string
@@ -18,7 +22,10 @@ export class TicketApiError extends Error {
   }
 }
 
-async function getErrorMessage(response: Response): Promise<string> {
+async function getErrorMessage(
+  response: Response,
+  fallbackMessage: string,
+): Promise<string> {
   try {
     const body = (await response.json()) as ApiErrorBody
     if (typeof body.detail === 'string') {
@@ -28,22 +35,56 @@ async function getErrorMessage(response: Response): Promise<string> {
     // The server may return an empty or non-JSON error response.
   }
 
-  return 'We could not create your ticket. Please try again.'
+  return fallbackMessage
+}
+
+async function requestJson<ResponseBody>(
+  path: string,
+  fallbackErrorMessage: string,
+  init?: RequestInit,
+): Promise<ResponseBody> {
+  const response = await fetch(`${API_BASE_URL}${path}`, init)
+
+  if (!response.ok) {
+    throw new TicketApiError(
+      await getErrorMessage(response, fallbackErrorMessage),
+      response.status,
+    )
+  }
+
+  return (await response.json()) as ResponseBody
 }
 
 // Keeping HTTP details here lets components focus on form and rendering state.
 export async function createTicket(
   ticket: TicketCreateRequest,
 ): Promise<TicketResponse> {
-  const response = await fetch(`${API_BASE_URL}/tickets`, {
+  return requestJson<TicketResponse>(
+    '/tickets',
+    'We could not create your ticket. Please try again.',
+    {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(ticket),
-  })
+    },
+  )
+}
 
-  if (!response.ok) {
-    throw new TicketApiError(await getErrorMessage(response), response.status)
-  }
+export async function getTicketsByRequester(
+  requesterId: number,
+): Promise<TicketResponse[]> {
+  const query = new URLSearchParams({ requester_id: String(requesterId) })
+  return requestJson<TicketResponse[]>(
+    `/tickets?${query.toString()}`,
+    'Could not load tickets.',
+  )
+}
 
-  return (await response.json()) as TicketResponse
+export async function getTicket(
+  ticketId: number,
+): Promise<TicketDetailsResponse> {
+  return requestJson<TicketDetailsResponse>(
+    `/tickets/${encodeURIComponent(String(ticketId))}`,
+    'Could not load ticket details.',
+  )
 }
