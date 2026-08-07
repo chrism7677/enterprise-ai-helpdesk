@@ -3,14 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { getTicket, TicketApiError } from '../api/tickets'
 import { TicketDetails } from '../components/TicketDetails'
 import type { TicketDetailsResponse } from '../types/ticket'
-
-function parseTicketId(value: string | undefined): number | null {
-  if (!value || !/^\d+$/.test(value)) {
-    return null
-  }
-  const ticketId = Number(value)
-  return Number.isSafeInteger(ticketId) && ticketId > 0 ? ticketId : null
-}
+import { parseTicketId } from '../utils/ticket'
 
 interface TicketLoadState {
   ticketId: number | null

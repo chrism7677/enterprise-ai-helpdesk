@@ -3,6 +3,7 @@ import type {
   TicketCreateRequest,
   TicketDetailsResponse,
   TicketResponse,
+  WorkNoteResponse,
 } from '../types/ticket'
 
 interface ApiErrorBody {
@@ -104,5 +105,48 @@ export async function getTicket(
   return requestJson<TicketDetailsResponse>(
     `/tickets/${encodeURIComponent(String(ticketId))}`,
     'Could not load ticket details.',
+  )
+}
+
+export async function claimTicket(
+  ticketId: number,
+  assigneeId: number,
+): Promise<TicketResponse> {
+  return requestJson<TicketResponse>(
+    `/tickets/${encodeURIComponent(String(ticketId))}/claim`,
+    'Could not claim this ticket.',
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ assignee_id: assigneeId }),
+    },
+  )
+}
+
+export async function createTicketNote(
+  ticketId: number,
+  authorId: number,
+  body: string,
+): Promise<WorkNoteResponse> {
+  // The backend derives the demo author today; retaining this argument keeps
+  // the caller ready for the authenticated-user contract that will replace it.
+  void authorId
+
+  return requestJson<WorkNoteResponse>(
+    `/tickets/${encodeURIComponent(String(ticketId))}/notes`,
+    'Could not add the work note.',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ body }),
+    },
+  )
+}
+
+export async function resolveTicket(ticketId: number): Promise<TicketResponse> {
+  return requestJson<TicketResponse>(
+    `/tickets/${encodeURIComponent(String(ticketId))}/resolve`,
+    'Could not resolve this ticket.',
+    { method: 'PATCH' },
   )
 }

@@ -309,6 +309,33 @@ dd {
   margin-top: 8px;
 }
 
+.ticket-actions {
+  margin-top: 24px;
+  border: 1px solid #dbe2ea;
+  border-radius: 12px;
+  padding: 24px;
+  background: #fff;
+}
+
+.ticket-actions h2 {
+  margin-bottom: 20px;
+}
+
+.work-note-form {
+  display: grid;
+  gap: 16px;
+}
+
+.resolve-action {
+  margin-top: 28px;
+  border-top: 1px solid #e5eaf0;
+  padding-top: 20px;
+}
+
+.resolve-action .secondary-button {
+  margin-top: 0;
+}
+
 .submit-button:hover:not(:disabled) {
   background: #1e40af;
 }
