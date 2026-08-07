@@ -4,6 +4,7 @@ import { TicketStatusBadge } from './TicketStatusBadge'
 
 export interface TicketListProps {
   tickets: TicketResponse[]
+  basePath: string
 }
 
 function formatDate(date: string): string {
@@ -12,7 +13,7 @@ function formatDate(date: string): string {
   )
 }
 
-export function TicketList({ tickets }: TicketListProps) {
+export function TicketList({ tickets, basePath }: TicketListProps) {
   return (
     <ul className="ticket-list">
       {tickets.map((ticket) => (
@@ -21,7 +22,7 @@ export function TicketList({ tickets }: TicketListProps) {
             <div>
               <p className="ticket-number">Ticket #{ticket.id}</p>
               <h2>
-                <Link to={`/employee/tickets/${ticket.id}`}>{ticket.title}</Link>
+                <Link to={`${basePath}/${ticket.id}`}>{ticket.title}</Link>
               </h2>
             </div>
             <TicketStatusBadge status={ticket.status} />

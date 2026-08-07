@@ -30,7 +30,15 @@ function initialLoadState(ticketId: number | null): TicketLoadState {
   }
 }
 
-export function TicketDetailsPage() {
+export interface TicketDetailsPageProps {
+  backPath?: string
+  backLabel?: string
+}
+
+export function TicketDetailsPage({
+  backPath = '/employee/tickets',
+  backLabel = 'Back to my tickets',
+}: TicketDetailsPageProps) {
   const { ticketId: routeTicketId } = useParams()
   const ticketId = parseTicketId(routeTicketId)
   const [loadState, setLoadState] = useState<TicketLoadState>(() =>
@@ -90,7 +98,7 @@ export function TicketDetailsPage() {
 
   return (
     <main className="page-shell">
-      <Link className="back-link" to="/employee/tickets">← Back to my tickets</Link>
+      <Link className="back-link" to={backPath}>← {backLabel}</Link>
       {currentState.isLoading && <p role="status">Loading ticket details...</p>}
       {!currentState.isLoading && currentState.isNotFound && (
         <section className="empty-state">

@@ -3,3 +3,4 @@ export const API_BASE_URL = (
 ).replace(/\/$/, '')
 
 export const DEMO_EMPLOYEE_ID = 1
+export const DEMO_IT_STAFF_ID = 2

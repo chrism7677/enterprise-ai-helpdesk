@@ -119,3 +119,88 @@ async def test_ticket_queue_can_be_filtered_by_requester(
     assert [ticket["title"] for ticket in filtered_response.json()] == [
         "Employee ticket"
     ]
+
+
+async def test_ticket_queue_assignment_filters(
+    client: AsyncClient,
+    db_session: Session,
+) -> None:
+    tickets = [
+        Ticket(
+            title="Unassigned employee ticket",
+            description="Waiting in the queue.",
+            category="software",
+            priority="medium",
+            requester_id=1,
+        ),
+        Ticket(
+            title="Assigned to demo IT staff",
+            description="Being handled by user 2.",
+            category="network",
+            priority="high",
+            requester_id=1,
+            assignee_id=2,
+        ),
+        Ticket(
+            title="Assigned to other IT staff",
+            description="Being handled by user 3.",
+            category="hardware",
+            priority="low",
+            requester_id=2,
+            assignee_id=3,
+        ),
+    ]
+    db_session.add_all(tickets)
+    db_session.commit()
+    for ticket in tickets:
+        db_session.refresh(ticket)
+
+    unfiltered_response = await client.get("/tickets")
+    requester_response = await client.get(
+        "/tickets", params={"requester_id": 1}
+    )
+    assignee_response = await client.get(
+        "/tickets", params={"assignee_id": 2}
+    )
+    unassigned_response = await client.get(
+        "/tickets", params={"unassigned": "true"}
+    )
+
+    assert unfiltered_response.status_code == 200
+    assert [item["id"] for item in unfiltered_response.json()] == [
+        ticket.id for ticket in tickets
+    ]
+    assert requester_response.status_code == 200
+    assert [item["id"] for item in requester_response.json()] == [
+        tickets[0].id,
+        tickets[1].id,
+    ]
+    assert assignee_response.status_code == 200
+    assert [item["id"] for item in assignee_response.json()] == [
+        tickets[1].id
+    ]
+    assert unassigned_response.status_code == 200
+    assert [item["id"] for item in unassigned_response.json()] == [
+        tickets[0].id
+    ]
+
+
+async def test_ticket_queue_rejects_conflicting_assignment_filters(
+    client: AsyncClient,
+) -> None:
+    response = await client.get(
+        "/tickets",
+        params={"assignee_id": 2, "unassigned": "true"},
+    )
+
+    assert response.status_code == 400
+    assert response.json() == {
+        "detail": "assignee_id and unassigned=true cannot be used together"
+    }
+
+
+async def test_ticket_queue_filtered_empty_result(client: AsyncClient) -> None:
+    response = await client.get("/tickets", params={"assignee_id": 999})
+
+    assert response.status_code == 200
+    assert response.json() == []

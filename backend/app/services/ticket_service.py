@@ -51,10 +51,16 @@ def create_ticket(db: Session, ticket_data: TicketCreate) -> Ticket:
 def list_tickets(
     db: Session,
     requester_id: int | None = None,
+    assignee_id: int | None = None,
+    unassigned: bool = False,
 ) -> list[Ticket]:
     statement = select(Ticket).order_by(Ticket.created_at, Ticket.id)
     if requester_id is not None:
         statement = statement.where(Ticket.requester_id == requester_id)
+    if assignee_id is not None:
+        statement = statement.where(Ticket.assignee_id == assignee_id)
+    if unassigned:
+        statement = statement.where(Ticket.assignee_id.is_(None))
     return list(db.scalars(statement).all())
 
 

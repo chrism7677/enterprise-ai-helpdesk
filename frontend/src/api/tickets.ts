@@ -80,6 +80,24 @@ export async function getTicketsByRequester(
   )
 }
 
+export async function getTicketsByAssignee(
+  assigneeId: number,
+): Promise<TicketResponse[]> {
+  const query = new URLSearchParams({ assignee_id: String(assigneeId) })
+  return requestJson<TicketResponse[]>(
+    `/tickets?${query.toString()}`,
+    'Could not load assigned tickets.',
+  )
+}
+
+export async function getUnassignedTickets(): Promise<TicketResponse[]> {
+  const query = new URLSearchParams({ unassigned: 'true' })
+  return requestJson<TicketResponse[]>(
+    `/tickets?${query.toString()}`,
+    'Could not load the unassigned queue.',
+  )
+}
+
 export async function getTicket(
   ticketId: number,
 ): Promise<TicketDetailsResponse> {

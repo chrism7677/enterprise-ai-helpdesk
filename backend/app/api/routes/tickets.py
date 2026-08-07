@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.db.database import get_db
@@ -44,9 +44,22 @@ def create_ticket(
 @router.get("", response_model=list[TicketResponse])
 def list_tickets(
     db: DatabaseSession,
-    requester_id: int | None = None,
+    requester_id: Annotated[int | None, Query(gt=0)] = None,
+    assignee_id: Annotated[int | None, Query(gt=0)] = None,
+    unassigned: bool = False,
 ) -> list[TicketResponse]:
-    tickets = ticket_service.list_tickets(db, requester_id=requester_id)
+    if assignee_id is not None and unassigned:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="assignee_id and unassigned=true cannot be used together",
+        )
+
+    tickets = ticket_service.list_tickets(
+        db,
+        requester_id=requester_id,
+        assignee_id=assignee_id,
+        unassigned=unassigned,
+    )
     return [TicketResponse.model_validate(ticket) for ticket in tickets]
 
 
