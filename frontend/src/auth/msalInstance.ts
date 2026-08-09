@@ -1,19 +1,18 @@
-import {
-  EventType,
-  PublicClientApplication,
-  type AuthenticationResult,
-} from '@azure/msal-browser'
+import { PublicClientApplication } from '@azure/msal-browser'
 import { msalConfig } from './authConfig'
 
 export const msalInstance = new PublicClientApplication(msalConfig)
 
-msalInstance.addEventCallback((event) => {
-  if (
-    event.eventType === EventType.LOGIN_SUCCESS &&
-    event.payload &&
-    'account' in event.payload
-  ) {
-    const authenticationResult = event.payload as AuthenticationResult
-    msalInstance.setActiveAccount(authenticationResult.account)
+export async function initializeMsal(): Promise<void> {
+  await msalInstance.initialize()
+
+  const redirectResult = await msalInstance.handleRedirectPromise()
+  const account =
+    redirectResult?.account ??
+    msalInstance.getActiveAccount() ??
+    msalInstance.getAllAccounts()[0]
+
+  if (account) {
+    msalInstance.setActiveAccount(account)
   }
-})
+}
