@@ -4,6 +4,61 @@
   padding: 64px 0;
 }
 
+.authentication-bar {
+  border-bottom: 1px solid #dbe2ea;
+  padding: 12px 16px;
+  background: #fff;
+}
+
+.authentication-content {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  width: min(720px, 100%);
+  margin: 0 auto;
+}
+
+.authentication-status {
+  color: #586579;
+  font-size: 0.88rem;
+}
+
+.authentication-button {
+  flex: 0 0 auto;
+  border: 1px solid #1d4ed8;
+  border-radius: 7px;
+  padding: 7px 12px;
+  background: #fff;
+  color: #1d4ed8;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.authentication-button:hover:not(:disabled) {
+  background: #eff6ff;
+}
+
+.authentication-button:focus-visible {
+  outline: 3px solid rgb(37 99 235 / 30%);
+  outline-offset: 2px;
+}
+
+.authentication-button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.authentication-error {
+  width: min(720px, 100%);
+  margin: 8px auto 0;
+  color: #b42318;
+  font-size: 0.84rem;
+  text-align: right;
+}
+
 .page-header {
   margin-bottom: 32px;
 }
