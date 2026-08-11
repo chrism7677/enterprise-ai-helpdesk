@@ -1,3 +1,4 @@
+import os
 from collections.abc import AsyncGenerator, Generator
 
 import pytest
@@ -5,6 +6,17 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
+
+# Required application identifiers are replaced at the validator boundary in
+# authentication tests; setting them here keeps all tests independent of a
+# developer's local .env file.
+os.environ.setdefault(
+    "ENTRA_TENANT_ID", "35aec465-2e0e-4877-8f10-e8d341af772c"
+)
+os.environ.setdefault(
+    "ENTRA_API_CLIENT_ID", "aa87e07e-dda0-4fce-aed8-0a7a04eb253d"
+)
+os.environ.setdefault("ENTRA_REQUIRED_SCOPE", "access_as_user")
 
 from app.db.database import Base, get_db
 from app.db.models import Ticket, User
