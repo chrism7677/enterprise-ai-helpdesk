@@ -5,6 +5,7 @@ import {
   UnauthenticatedTemplate,
   useMsal,
 } from '@azure/msal-react'
+import { apiTokenRequest } from '../auth/authConfig'
 
 export function AuthenticationControls() {
   const { instance, accounts, inProgress } = useMsal()
@@ -16,7 +17,7 @@ export function AuthenticationControls() {
     setAuthenticationError(null)
 
     try {
-      await instance.loginRedirect()
+      await instance.loginRedirect(apiTokenRequest)
     } catch (error) {
       setAuthenticationError(
         error instanceof Error ? error.message : 'Microsoft sign-in could not be started.',

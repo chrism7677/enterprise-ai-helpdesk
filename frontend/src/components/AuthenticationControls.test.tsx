@@ -24,6 +24,10 @@ vi.mock('@azure/msal-react', () => ({
   }),
 }))
 
+vi.mock('../auth/authConfig', () => ({
+  apiTokenRequest: { scopes: ['api://fastapi/access_as_user'] },
+}))
+
 describe('AuthenticationControls', () => {
   beforeEach(() => {
     msalMocks.accounts.length = 0
@@ -36,7 +40,9 @@ describe('AuthenticationControls', () => {
 
     await userEvent.click(screen.getByRole('button', { name: 'Sign in with Microsoft' }))
 
-    expect(msalMocks.loginRedirect).toHaveBeenCalledOnce()
+    expect(msalMocks.loginRedirect).toHaveBeenCalledWith({
+      scopes: ['api://fastapi/access_as_user'],
+    })
   })
 
   it('shows the signed-in account and starts redirect logout', async () => {

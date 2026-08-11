@@ -1,10 +1,10 @@
-import { API_BASE_URL } from '../config'
 import type {
   TicketCreateRequest,
   TicketDetailsResponse,
   TicketResponse,
   WorkNoteResponse,
 } from '../types/ticket'
+import { authenticatedFetch } from './client'
 
 interface ApiErrorBody {
   detail?: string
@@ -44,7 +44,7 @@ async function requestJson<ResponseBody>(
   fallbackErrorMessage: string,
   init?: RequestInit,
 ): Promise<ResponseBody> {
-  const response = await fetch(`${API_BASE_URL}${path}`, init)
+  const response = await authenticatedFetch(path, init)
 
   if (!response.ok) {
     throw new TicketApiError(
