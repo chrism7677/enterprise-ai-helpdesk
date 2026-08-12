@@ -18,7 +18,7 @@ os.environ.setdefault(
 )
 os.environ.setdefault("ENTRA_REQUIRED_SCOPE", "access_as_user")
 
-from app.auth.entra import EntraTokenClaims, get_validated_entra_claims
+from app.api.deps import get_current_user
 from app.db.database import Base, get_db
 from app.db.models import Ticket, User
 from app.main import app
@@ -113,17 +113,13 @@ async def client(
 @pytest.fixture
 async def authenticated_client(
     client: AsyncClient,
+    db_session: Session,
 ) -> AsyncGenerator[AsyncClient, None]:
-    async def override_validated_claims() -> EntraTokenClaims:
-        return EntraTokenClaims(
-            sub="test-subject-id",
-            oid="11111111-2222-3333-4444-555555555555",
-            tid="35aec465-2e0e-4877-8f10-e8d341af772c",
-            scp="access_as_user",
-        )
+    async def override_current_user() -> User:
+        user = db_session.get(User, 1)
+        assert user is not None
+        return user
 
-    app.dependency_overrides[get_validated_entra_claims] = (
-        override_validated_claims
-    )
+    app.dependency_overrides[get_current_user] = override_current_user
     yield client
-    app.dependency_overrides.pop(get_validated_entra_claims, None)
+    app.dependency_overrides.pop(get_current_user, None)
