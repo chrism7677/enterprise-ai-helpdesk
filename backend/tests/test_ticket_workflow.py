@@ -10,28 +10,28 @@ pytestmark = pytest.mark.anyio
 
 
 async def test_get_existing_ticket(
-    client: AsyncClient,
+    authenticated_client: AsyncClient,
     ticket: Ticket,
 ) -> None:
-    response = await client.get(f"/tickets/{ticket.id}")
+    response = await authenticated_client.get(f"/tickets/{ticket.id}")
 
     assert response.status_code == 200
     assert response.json()["id"] == ticket.id
 
 
-async def test_get_missing_ticket(client: AsyncClient) -> None:
-    response = await client.get("/tickets/999")
+async def test_get_missing_ticket(authenticated_client: AsyncClient) -> None:
+    response = await authenticated_client.get("/tickets/999")
 
     assert response.status_code == 404
     assert response.json() == {"detail": "Ticket not found"}
 
 
 async def test_create_ticket_note(
-    client: AsyncClient,
+    authenticated_client: AsyncClient,
     db_session: Session,
     ticket: Ticket,
 ) -> None:
-    response = await client.post(
+    response = await authenticated_client.post(
         f"/tickets/{ticket.id}/notes",
         json={"body": "Reset the VPN profile and asked the user to retry."},
     )
@@ -48,8 +48,10 @@ async def test_create_ticket_note(
     assert persisted_note.author_id == 2
 
 
-async def test_create_note_for_missing_ticket(client: AsyncClient) -> None:
-    response = await client.post(
+async def test_create_note_for_missing_ticket(
+    authenticated_client: AsyncClient,
+) -> None:
+    response = await authenticated_client.post(
         "/tickets/999/notes",
         json={"body": "Investigating the issue."},
     )
@@ -59,10 +61,10 @@ async def test_create_note_for_missing_ticket(client: AsyncClient) -> None:
 
 
 async def test_create_ticket_note_rejects_blank_body(
-    client: AsyncClient,
+    authenticated_client: AsyncClient,
     ticket: Ticket,
 ) -> None:
-    response = await client.post(
+    response = await authenticated_client.post(
         f"/tickets/{ticket.id}/notes",
         json={"body": "   \n\t"},
     )
@@ -71,7 +73,7 @@ async def test_create_ticket_note_rejects_blank_body(
 
 
 async def test_ticket_detail_returns_notes_in_chronological_order(
-    client: AsyncClient,
+    authenticated_client: AsyncClient,
     db_session: Session,
     ticket: Ticket,
 ) -> None:
@@ -94,7 +96,7 @@ async def test_ticket_detail_returns_notes_in_chronological_order(
     )
     db_session.commit()
 
-    response = await client.get(f"/tickets/{ticket.id}")
+    response = await authenticated_client.get(f"/tickets/{ticket.id}")
 
     assert response.status_code == 200
     assert [note["body"] for note in response.json()["notes"]] == [
@@ -104,7 +106,7 @@ async def test_ticket_detail_returns_notes_in_chronological_order(
 
 
 async def test_ticket_collection_does_not_include_note_histories(
-    client: AsyncClient,
+    authenticated_client: AsyncClient,
     db_session: Session,
     ticket: Ticket,
 ) -> None:
@@ -117,7 +119,7 @@ async def test_ticket_collection_does_not_include_note_histories(
     )
     db_session.commit()
 
-    response = await client.get("/tickets")
+    response = await authenticated_client.get("/tickets")
 
     assert response.status_code == 200
     assert len(response.json()) == 1
@@ -125,11 +127,11 @@ async def test_ticket_collection_does_not_include_note_histories(
 
 
 async def test_claim_ticket_persists_assignee_and_status(
-    client: AsyncClient,
+    authenticated_client: AsyncClient,
     db_session: Session,
     ticket: Ticket,
 ) -> None:
-    response = await client.patch(
+    response = await authenticated_client.patch(
         f"/tickets/{ticket.id}/claim",
         json={"assignee_id": 2},
     )
@@ -144,8 +146,10 @@ async def test_claim_ticket_persists_assignee_and_status(
     assert persisted_ticket.status == "in_progress"
 
 
-async def test_claim_missing_ticket(client: AsyncClient) -> None:
-    response = await client.patch(
+async def test_claim_missing_ticket(
+    authenticated_client: AsyncClient,
+) -> None:
+    response = await authenticated_client.patch(
         "/tickets/999/claim",
         json={"assignee_id": 2},
     )
@@ -155,10 +159,10 @@ async def test_claim_missing_ticket(client: AsyncClient) -> None:
 
 
 async def test_claim_with_missing_assignee(
-    client: AsyncClient,
+    authenticated_client: AsyncClient,
     ticket: Ticket,
 ) -> None:
-    response = await client.patch(
+    response = await authenticated_client.patch(
         f"/tickets/{ticket.id}/claim",
         json={"assignee_id": 999},
     )
@@ -168,10 +172,10 @@ async def test_claim_with_missing_assignee(
 
 
 async def test_claim_rejects_employee(
-    client: AsyncClient,
+    authenticated_client: AsyncClient,
     ticket: Ticket,
 ) -> None:
-    response = await client.patch(
+    response = await authenticated_client.patch(
         f"/tickets/{ticket.id}/claim",
         json={"assignee_id": 1},
     )
@@ -183,7 +187,7 @@ async def test_claim_rejects_employee(
 
 
 async def test_claim_rejects_different_assignee(
-    client: AsyncClient,
+    authenticated_client: AsyncClient,
     db_session: Session,
     ticket: Ticket,
 ) -> None:
@@ -191,7 +195,7 @@ async def test_claim_rejects_different_assignee(
     ticket.status = "in_progress"
     db_session.commit()
 
-    response = await client.patch(
+    response = await authenticated_client.patch(
         f"/tickets/{ticket.id}/claim",
         json={"assignee_id": 2},
     )
@@ -207,7 +211,7 @@ async def test_claim_rejects_different_assignee(
 
 
 async def test_repeated_claim_by_same_assignee_is_idempotent(
-    client: AsyncClient,
+    authenticated_client: AsyncClient,
     db_session: Session,
     ticket: Ticket,
 ) -> None:
@@ -215,7 +219,7 @@ async def test_repeated_claim_by_same_assignee_is_idempotent(
     ticket.status = "in_progress"
     db_session.commit()
 
-    response = await client.patch(
+    response = await authenticated_client.patch(
         f"/tickets/{ticket.id}/claim",
         json={"assignee_id": 2},
     )
@@ -226,7 +230,7 @@ async def test_repeated_claim_by_same_assignee_is_idempotent(
 
 
 async def test_resolve_claimed_ticket_persists_status(
-    client: AsyncClient,
+    authenticated_client: AsyncClient,
     db_session: Session,
     ticket: Ticket,
 ) -> None:
@@ -234,7 +238,9 @@ async def test_resolve_claimed_ticket_persists_status(
     ticket.status = "in_progress"
     db_session.commit()
 
-    response = await client.patch(f"/tickets/{ticket.id}/resolve")
+    response = await authenticated_client.patch(
+        f"/tickets/{ticket.id}/resolve"
+    )
 
     assert response.status_code == 200
     assert response.json()["status"] == "resolved"
@@ -244,18 +250,22 @@ async def test_resolve_claimed_ticket_persists_status(
     assert persisted_ticket.status == "resolved"
 
 
-async def test_resolve_missing_ticket(client: AsyncClient) -> None:
-    response = await client.patch("/tickets/999/resolve")
+async def test_resolve_missing_ticket(
+    authenticated_client: AsyncClient,
+) -> None:
+    response = await authenticated_client.patch("/tickets/999/resolve")
 
     assert response.status_code == 404
     assert response.json() == {"detail": "Ticket not found"}
 
 
 async def test_resolve_rejects_unassigned_ticket(
-    client: AsyncClient,
+    authenticated_client: AsyncClient,
     ticket: Ticket,
 ) -> None:
-    response = await client.patch(f"/tickets/{ticket.id}/resolve")
+    response = await authenticated_client.patch(
+        f"/tickets/{ticket.id}/resolve"
+    )
 
     assert response.status_code == 409
     assert response.json() == {
@@ -264,7 +274,7 @@ async def test_resolve_rejects_unassigned_ticket(
 
 
 async def test_resolve_already_resolved_ticket_is_idempotent(
-    client: AsyncClient,
+    authenticated_client: AsyncClient,
     db_session: Session,
     ticket: Ticket,
 ) -> None:
@@ -272,7 +282,9 @@ async def test_resolve_already_resolved_ticket_is_idempotent(
     ticket.status = "resolved"
     db_session.commit()
 
-    response = await client.patch(f"/tickets/{ticket.id}/resolve")
+    response = await authenticated_client.patch(
+        f"/tickets/{ticket.id}/resolve"
+    )
 
     assert response.status_code == 200
     assert response.json()["status"] == "resolved"

@@ -218,7 +218,7 @@ async def get_validated_entra_claims(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    try:
+    try: #Dependency that is required to succeed, i.e., the API Router requires this for all endpoints.
         return await validator.validate_access_token(credentials.credentials)
     except InsufficientScopeError:
         raise HTTPException(

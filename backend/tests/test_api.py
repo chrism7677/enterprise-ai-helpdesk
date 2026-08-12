@@ -14,14 +14,30 @@ async def test_health_check(client: AsyncClient) -> None:
     assert response.json() == {"status": "ok"}
 
 
-async def test_ticket_queue_is_empty(client: AsyncClient) -> None:
+async def test_ticket_route_rejects_missing_authentication(
+    client: AsyncClient,
+) -> None:
     response = await client.get("/tickets")
+
+    assert response.status_code == 401
+    assert response.json() == {
+        "detail": "Authentication credentials are required"
+    }
+    assert response.headers["www-authenticate"] == "Bearer"
+
+
+async def test_ticket_queue_is_empty(
+    authenticated_client: AsyncClient,
+) -> None:
+    response = await authenticated_client.get("/tickets")
 
     assert response.status_code == 200
     assert response.json() == []
 
 
-async def test_create_ticket_and_retrieve_it(client: AsyncClient) -> None:
+async def test_create_ticket_and_retrieve_it(
+    authenticated_client: AsyncClient,
+) -> None:
     request_body = {
         "title": "Cannot connect to VPN",
         "description": "The VPN client times out during connection.",
@@ -30,7 +46,9 @@ async def test_create_ticket_and_retrieve_it(client: AsyncClient) -> None:
         "requester_id": 1,
     }
 
-    create_response = await client.post("/tickets", json=request_body)
+    create_response = await authenticated_client.post(
+        "/tickets", json=request_body
+    )
 
     assert create_response.status_code == 201
     created_ticket = create_response.json()
@@ -41,16 +59,16 @@ async def test_create_ticket_and_retrieve_it(client: AsyncClient) -> None:
         key: created_ticket[key] for key in request_body
     } == request_body
 
-    queue_response = await client.get("/tickets")
+    queue_response = await authenticated_client.get("/tickets")
 
     assert queue_response.status_code == 200
     assert queue_response.json() == [created_ticket]
 
 
 async def test_create_ticket_rejects_invalid_data(
-    client: AsyncClient,
+    authenticated_client: AsyncClient,
 ) -> None:
-    response = await client.post(
+    response = await authenticated_client.post(
         "/tickets",
         json={
             "title": "",
@@ -64,9 +82,9 @@ async def test_create_ticket_rejects_invalid_data(
 
 
 async def test_create_ticket_rejects_unknown_requester(
-    client: AsyncClient,
+    authenticated_client: AsyncClient,
 ) -> None:
-    response = await client.post(
+    response = await authenticated_client.post(
         "/tickets",
         json={
             "title": "Cannot connect to VPN",
@@ -82,7 +100,7 @@ async def test_create_ticket_rejects_unknown_requester(
 
 
 async def test_ticket_queue_can_be_filtered_by_requester(
-    client: AsyncClient,
+    authenticated_client: AsyncClient,
     db_session: Session,
 ) -> None:
     db_session.add_all(
@@ -105,8 +123,8 @@ async def test_ticket_queue_can_be_filtered_by_requester(
     )
     db_session.commit()
 
-    unfiltered_response = await client.get("/tickets")
-    filtered_response = await client.get(
+    unfiltered_response = await authenticated_client.get("/tickets")
+    filtered_response = await authenticated_client.get(
         "/tickets", params={"requester_id": 1}
     )
 
@@ -122,7 +140,7 @@ async def test_ticket_queue_can_be_filtered_by_requester(
 
 
 async def test_ticket_queue_assignment_filters(
-    client: AsyncClient,
+    authenticated_client: AsyncClient,
     db_session: Session,
 ) -> None:
     tickets = [
@@ -155,14 +173,14 @@ async def test_ticket_queue_assignment_filters(
     for ticket in tickets:
         db_session.refresh(ticket)
 
-    unfiltered_response = await client.get("/tickets")
-    requester_response = await client.get(
+    unfiltered_response = await authenticated_client.get("/tickets")
+    requester_response = await authenticated_client.get(
         "/tickets", params={"requester_id": 1}
     )
-    assignee_response = await client.get(
+    assignee_response = await authenticated_client.get(
         "/tickets", params={"assignee_id": 2}
     )
-    unassigned_response = await client.get(
+    unassigned_response = await authenticated_client.get(
         "/tickets", params={"unassigned": "true"}
     )
 
@@ -186,9 +204,9 @@ async def test_ticket_queue_assignment_filters(
 
 
 async def test_ticket_queue_rejects_conflicting_assignment_filters(
-    client: AsyncClient,
+    authenticated_client: AsyncClient,
 ) -> None:
-    response = await client.get(
+    response = await authenticated_client.get(
         "/tickets",
         params={"assignee_id": 2, "unassigned": "true"},
     )
@@ -199,8 +217,12 @@ async def test_ticket_queue_rejects_conflicting_assignment_filters(
     }
 
 
-async def test_ticket_queue_filtered_empty_result(client: AsyncClient) -> None:
-    response = await client.get("/tickets", params={"assignee_id": 999})
+async def test_ticket_queue_filtered_empty_result(
+    authenticated_client: AsyncClient,
+) -> None:
+    response = await authenticated_client.get(
+        "/tickets", params={"assignee_id": 999}
+    )
 
     assert response.status_code == 200
     assert response.json() == []

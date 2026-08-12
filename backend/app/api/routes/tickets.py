@@ -3,6 +3,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
+from app.auth.entra import get_validated_entra_claims
 from app.db.database import get_db
 from app.db.models import User
 from app.schemas.ticket import (
@@ -15,7 +16,11 @@ from app.schemas.ticket import (
 )
 from app.services import ticket_service
 
-router = APIRouter(prefix="/tickets", tags=["tickets"])
+router = APIRouter(
+    prefix="/tickets",
+    tags=["tickets"],
+    dependencies=[Depends(get_validated_entra_claims)],
+)
 
 
 DatabaseSession = Annotated[Session, Depends(get_db)]
