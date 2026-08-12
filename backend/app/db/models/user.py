@@ -30,6 +30,13 @@ class User(Base):
         nullable=False,
     )
 
+    entra_oid: Mapped[str | None] = mapped_column(
+        String(36),
+        unique=True,
+        index=True,
+        nullable=True,
+    )
+
     name: Mapped[str] = mapped_column(
         String(100),
         nullable=False,
