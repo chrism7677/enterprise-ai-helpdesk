@@ -3,7 +3,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user, require_employee, require_it_staff
 from app.db.database import get_db
 from app.db.models import User
 from app.schemas.ticket import (
@@ -19,7 +19,6 @@ from app.services import ticket_service
 router = APIRouter(
     prefix="/tickets",
     tags=["tickets"],
-    dependencies=[Depends(get_current_user)],
 )
 
 
@@ -31,6 +30,7 @@ DEMO_IT_STAFF_USER_ID = 2
     "",
     response_model=TicketResponse,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_employee)],
 )
 def create_ticket(
     ticket: TicketCreate,
@@ -46,7 +46,11 @@ def create_ticket(
     return TicketResponse.model_validate(created_ticket)
 
 
-@router.get("", response_model=list[TicketResponse])
+@router.get(
+    "",
+    response_model=list[TicketResponse],
+    dependencies=[Depends(get_current_user)],
+)
 def list_tickets(
     db: DatabaseSession,
     requester_id: Annotated[int | None, Query(gt=0)] = None,
@@ -68,7 +72,11 @@ def list_tickets(
     return [TicketResponse.model_validate(ticket) for ticket in tickets]
 
 
-@router.get("/{ticket_id}", response_model=TicketDetailResponse)
+@router.get(
+    "/{ticket_id}",
+    response_model=TicketDetailResponse,
+    dependencies=[Depends(get_current_user)],
+)
 def get_ticket(ticket_id: int, db: DatabaseSession) -> TicketDetailResponse:
     try:
         ticket = ticket_service.get_ticket(db, ticket_id)
@@ -84,6 +92,7 @@ def get_ticket(ticket_id: int, db: DatabaseSession) -> TicketDetailResponse:
     "/{ticket_id}/notes",
     response_model=TicketNoteResponse,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_it_staff)],
 )
 def create_ticket_note(
     ticket_id: int,
@@ -115,7 +124,11 @@ def create_ticket_note(
     return TicketNoteResponse.model_validate(created_note)
 
 
-@router.patch("/{ticket_id}/claim", response_model=TicketResponse)
+@router.patch(
+    "/{ticket_id}/claim",
+    response_model=TicketResponse,
+    dependencies=[Depends(require_it_staff)],
+)
 def claim_ticket(
     ticket_id: int,
     claim: TicketClaim,
@@ -146,7 +159,11 @@ def claim_ticket(
     return TicketResponse.model_validate(ticket)
 
 
-@router.patch("/{ticket_id}/resolve", response_model=TicketResponse)
+@router.patch(
+    "/{ticket_id}/resolve",
+    response_model=TicketResponse,
+    dependencies=[Depends(require_it_staff)],
+)
 def resolve_ticket(ticket_id: int, db: DatabaseSession) -> TicketResponse:
     try:
         ticket = ticket_service.resolve_ticket(db, ticket_id)

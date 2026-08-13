@@ -33,3 +33,23 @@ def get_current_user(
 
 
 CurrentUser = Annotated[User, Depends(get_current_user)]
+
+
+def require_employee(current_user: CurrentUser) -> User:
+    """Require the current application user to have the employee role."""
+    if current_user.role != "employee":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Employee role required",
+        )
+    return current_user
+
+
+def require_it_staff(current_user: CurrentUser) -> User:
+    """Require the current application user to have the IT staff role."""
+    if current_user.role != "it_staff":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="IT staff role required",
+        )
+    return current_user

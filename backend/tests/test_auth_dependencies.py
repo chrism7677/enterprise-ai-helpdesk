@@ -3,7 +3,11 @@ from fastapi import HTTPException
 from httpx import AsyncClient
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user
+from app.api.deps import (
+    get_current_user,
+    require_employee,
+    require_it_staff,
+)
 from app.auth.entra import EntraTokenClaims
 from app.db.models import User
 from app.main import app
@@ -67,6 +71,46 @@ def test_get_current_user_translates_identity_mapping_errors(
 
     assert caught_error.value.status_code == expected_status
     assert caught_error.value.detail == expected_detail
+
+
+def test_require_employee_returns_authenticated_employee(
+    db_session: Session,
+) -> None:
+    employee = db_session.get(User, 1)
+    assert employee is not None
+
+    assert require_employee(current_user=employee) is employee
+
+
+def test_require_employee_rejects_it_staff(db_session: Session) -> None:
+    it_staff = db_session.get(User, 2)
+    assert it_staff is not None
+
+    with pytest.raises(HTTPException) as caught_error:
+        require_employee(current_user=it_staff)
+
+    assert caught_error.value.status_code == 403
+    assert caught_error.value.detail == "Employee role required"
+
+
+def test_require_it_staff_returns_authenticated_it_staff(
+    db_session: Session,
+) -> None:
+    it_staff = db_session.get(User, 2)
+    assert it_staff is not None
+
+    assert require_it_staff(current_user=it_staff) is it_staff
+
+
+def test_require_it_staff_rejects_employee(db_session: Session) -> None:
+    employee = db_session.get(User, 1)
+    assert employee is not None
+
+    with pytest.raises(HTTPException) as caught_error:
+        require_it_staff(current_user=employee)
+
+    assert caught_error.value.status_code == 403
+    assert caught_error.value.detail == "IT staff role required"
 
 
 @pytest.mark.anyio

@@ -123,3 +123,18 @@ async def authenticated_client(
     app.dependency_overrides[get_current_user] = override_current_user
     yield client
     app.dependency_overrides.pop(get_current_user, None)
+
+
+@pytest.fixture
+async def it_staff_authenticated_client(
+    client: AsyncClient,
+    db_session: Session,
+) -> AsyncGenerator[AsyncClient, None]:
+    async def override_current_user() -> User:
+        user = db_session.get(User, 2)
+        assert user is not None
+        return user
+
+    app.dependency_overrides[get_current_user] = override_current_user
+    yield client
+    app.dependency_overrides.pop(get_current_user, None)

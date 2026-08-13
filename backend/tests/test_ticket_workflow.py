@@ -27,11 +27,11 @@ async def test_get_missing_ticket(authenticated_client: AsyncClient) -> None:
 
 
 async def test_create_ticket_note(
-    authenticated_client: AsyncClient,
+    it_staff_authenticated_client: AsyncClient,
     db_session: Session,
     ticket: Ticket,
 ) -> None:
-    response = await authenticated_client.post(
+    response = await it_staff_authenticated_client.post(
         f"/tickets/{ticket.id}/notes",
         json={"body": "Reset the VPN profile and asked the user to retry."},
     )
@@ -49,9 +49,9 @@ async def test_create_ticket_note(
 
 
 async def test_create_note_for_missing_ticket(
-    authenticated_client: AsyncClient,
+    it_staff_authenticated_client: AsyncClient,
 ) -> None:
-    response = await authenticated_client.post(
+    response = await it_staff_authenticated_client.post(
         "/tickets/999/notes",
         json={"body": "Investigating the issue."},
     )
@@ -61,10 +61,10 @@ async def test_create_note_for_missing_ticket(
 
 
 async def test_create_ticket_note_rejects_blank_body(
-    authenticated_client: AsyncClient,
+    it_staff_authenticated_client: AsyncClient,
     ticket: Ticket,
 ) -> None:
-    response = await authenticated_client.post(
+    response = await it_staff_authenticated_client.post(
         f"/tickets/{ticket.id}/notes",
         json={"body": "   \n\t"},
     )
@@ -127,11 +127,11 @@ async def test_ticket_collection_does_not_include_note_histories(
 
 
 async def test_claim_ticket_persists_assignee_and_status(
-    authenticated_client: AsyncClient,
+    it_staff_authenticated_client: AsyncClient,
     db_session: Session,
     ticket: Ticket,
 ) -> None:
-    response = await authenticated_client.patch(
+    response = await it_staff_authenticated_client.patch(
         f"/tickets/{ticket.id}/claim",
         json={"assignee_id": 2},
     )
@@ -147,9 +147,9 @@ async def test_claim_ticket_persists_assignee_and_status(
 
 
 async def test_claim_missing_ticket(
-    authenticated_client: AsyncClient,
+    it_staff_authenticated_client: AsyncClient,
 ) -> None:
-    response = await authenticated_client.patch(
+    response = await it_staff_authenticated_client.patch(
         "/tickets/999/claim",
         json={"assignee_id": 2},
     )
@@ -159,10 +159,10 @@ async def test_claim_missing_ticket(
 
 
 async def test_claim_with_missing_assignee(
-    authenticated_client: AsyncClient,
+    it_staff_authenticated_client: AsyncClient,
     ticket: Ticket,
 ) -> None:
-    response = await authenticated_client.patch(
+    response = await it_staff_authenticated_client.patch(
         f"/tickets/{ticket.id}/claim",
         json={"assignee_id": 999},
     )
@@ -172,10 +172,10 @@ async def test_claim_with_missing_assignee(
 
 
 async def test_claim_rejects_employee(
-    authenticated_client: AsyncClient,
+    it_staff_authenticated_client: AsyncClient,
     ticket: Ticket,
 ) -> None:
-    response = await authenticated_client.patch(
+    response = await it_staff_authenticated_client.patch(
         f"/tickets/{ticket.id}/claim",
         json={"assignee_id": 1},
     )
@@ -187,7 +187,7 @@ async def test_claim_rejects_employee(
 
 
 async def test_claim_rejects_different_assignee(
-    authenticated_client: AsyncClient,
+    it_staff_authenticated_client: AsyncClient,
     db_session: Session,
     ticket: Ticket,
 ) -> None:
@@ -195,7 +195,7 @@ async def test_claim_rejects_different_assignee(
     ticket.status = "in_progress"
     db_session.commit()
 
-    response = await authenticated_client.patch(
+    response = await it_staff_authenticated_client.patch(
         f"/tickets/{ticket.id}/claim",
         json={"assignee_id": 2},
     )
@@ -211,7 +211,7 @@ async def test_claim_rejects_different_assignee(
 
 
 async def test_repeated_claim_by_same_assignee_is_idempotent(
-    authenticated_client: AsyncClient,
+    it_staff_authenticated_client: AsyncClient,
     db_session: Session,
     ticket: Ticket,
 ) -> None:
@@ -219,7 +219,7 @@ async def test_repeated_claim_by_same_assignee_is_idempotent(
     ticket.status = "in_progress"
     db_session.commit()
 
-    response = await authenticated_client.patch(
+    response = await it_staff_authenticated_client.patch(
         f"/tickets/{ticket.id}/claim",
         json={"assignee_id": 2},
     )
@@ -230,7 +230,7 @@ async def test_repeated_claim_by_same_assignee_is_idempotent(
 
 
 async def test_resolve_claimed_ticket_persists_status(
-    authenticated_client: AsyncClient,
+    it_staff_authenticated_client: AsyncClient,
     db_session: Session,
     ticket: Ticket,
 ) -> None:
@@ -238,7 +238,7 @@ async def test_resolve_claimed_ticket_persists_status(
     ticket.status = "in_progress"
     db_session.commit()
 
-    response = await authenticated_client.patch(
+    response = await it_staff_authenticated_client.patch(
         f"/tickets/{ticket.id}/resolve"
     )
 
@@ -251,19 +251,21 @@ async def test_resolve_claimed_ticket_persists_status(
 
 
 async def test_resolve_missing_ticket(
-    authenticated_client: AsyncClient,
+    it_staff_authenticated_client: AsyncClient,
 ) -> None:
-    response = await authenticated_client.patch("/tickets/999/resolve")
+    response = await it_staff_authenticated_client.patch(
+        "/tickets/999/resolve"
+    )
 
     assert response.status_code == 404
     assert response.json() == {"detail": "Ticket not found"}
 
 
 async def test_resolve_rejects_unassigned_ticket(
-    authenticated_client: AsyncClient,
+    it_staff_authenticated_client: AsyncClient,
     ticket: Ticket,
 ) -> None:
-    response = await authenticated_client.patch(
+    response = await it_staff_authenticated_client.patch(
         f"/tickets/{ticket.id}/resolve"
     )
 
@@ -274,7 +276,7 @@ async def test_resolve_rejects_unassigned_ticket(
 
 
 async def test_resolve_already_resolved_ticket_is_idempotent(
-    authenticated_client: AsyncClient,
+    it_staff_authenticated_client: AsyncClient,
     db_session: Session,
     ticket: Ticket,
 ) -> None:
@@ -282,7 +284,7 @@ async def test_resolve_already_resolved_ticket_is_idempotent(
     ticket.status = "resolved"
     db_session.commit()
 
-    response = await authenticated_client.patch(
+    response = await it_staff_authenticated_client.patch(
         f"/tickets/{ticket.id}/resolve"
     )
 
