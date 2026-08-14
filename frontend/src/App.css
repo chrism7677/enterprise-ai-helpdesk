@@ -59,6 +59,26 @@
   text-align: right;
 }
 
+.application-navigation {
+  display: flex;
+  gap: 20px;
+  width: min(720px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 14px 0;
+}
+
+.application-navigation a {
+  color: #334155;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.application-navigation a:hover,
+.application-navigation a[aria-current='page'] {
+  color: #1d4ed8;
+}
+
 .page-header {
   margin-bottom: 32px;
 }

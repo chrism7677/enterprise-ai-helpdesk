@@ -7,8 +7,10 @@ from app.schemas.ticket import (
     TicketNoteResponse,
     TicketResponse,
 )
+from app.schemas.user import CurrentUserResponse
 
 __all__ = [
+    "CurrentUserResponse",
     "TicketCreate",
     "TicketDetailResponse",
     "TicketNoteCreate",

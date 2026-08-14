@@ -6,6 +6,17 @@ import { createTicket } from './api/tickets'
 import type { TicketResponse } from './types/ticket'
 
 vi.mock('./api/tickets', () => ({ createTicket: vi.fn() }))
+vi.mock('./auth/ApplicationAuthContext', () => ({
+  useApplicationAuth: () => ({
+    status: 'authenticated',
+    currentUser: {
+      id: 1,
+      name: 'Demo Employee',
+      email: 'employee@example.com',
+      role: 'employee',
+    },
+  }),
+}))
 
 const mockedCreateTicket = vi.mocked(createTicket)
 

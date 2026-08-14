@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { MsalProvider } from '@azure/msal-react'
 import './index.css'
 import App from './App.tsx'
+import { ApplicationAuthProvider } from './auth/ApplicationAuthProvider.tsx'
 import { initializeMsal, msalInstance } from './auth/msalInstance.ts'
 import { AuthenticationControls } from './components/AuthenticationControls.tsx'
 
@@ -12,8 +13,10 @@ async function bootstrapApplication(): Promise<void> {
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
       <MsalProvider instance={msalInstance}>
-        <AuthenticationControls />
-        <App />
+        <ApplicationAuthProvider>
+          <AuthenticationControls />
+          <App />
+        </ApplicationAuthProvider>
       </MsalProvider>
     </StrictMode>,
   )

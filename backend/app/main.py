@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes.auth import router as auth_router
 from app.api.routes.tickets import router as ticket_router
+from app.api.routes.users import router as user_router
 
 
 app = FastAPI()
@@ -22,6 +23,7 @@ async def health_check() -> dict[str, str]:
 
 app.include_router(ticket_router)
 app.include_router(auth_router)
+app.include_router(user_router)
 
 
 """

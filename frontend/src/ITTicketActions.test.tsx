@@ -24,6 +24,17 @@ vi.mock('./api/tickets', async (importOriginal) => {
     resolveTicket: vi.fn(),
   }
 })
+vi.mock('./auth/ApplicationAuthContext', () => ({
+  useApplicationAuth: () => ({
+    status: 'authenticated',
+    currentUser: {
+      id: 2,
+      name: 'Demo IT Staff',
+      email: 'it.staff@example.com',
+      role: 'it_staff',
+    },
+  }),
+}))
 
 const mockedClaimTicket = vi.mocked(claimTicket)
 const mockedCreateTicketNote = vi.mocked(createTicketNote)
