@@ -3,27 +3,11 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.db.models import Ticket, TicketNote, User
-from app.schemas.ticket import TicketClaim, TicketCreate, TicketNoteCreate
+from app.schemas.ticket import TicketCreate, TicketNoteCreate
 
 
 class TicketNotFoundError(Exception):
     """Raised when a requested ticket does not exist."""
-
-
-class AssigneeNotFoundError(Exception):
-    """Raised when a proposed ticket assignee does not exist."""
-
-
-class InvalidAssigneeRoleError(Exception):
-    """Raised when a proposed assignee is not an IT staff user."""
-
-
-class NoteAuthorNotFoundError(Exception):
-    """Raised when a proposed note author does not exist."""
-
-
-class InvalidNoteAuthorRoleError(Exception):
-    """Raised when a proposed note author is not an IT staff user."""
 
 
 class TicketAlreadyAssignedError(Exception):
@@ -34,8 +18,23 @@ class TicketNotClaimedError(Exception):
     """Raised when an unassigned ticket is resolved."""
 
 
-def create_ticket(db: Session, ticket_data: TicketCreate) -> Ticket:
-    ticket = Ticket(**ticket_data.model_dump())
+class TicketAccessForbiddenError(Exception):
+    """Raised when a user is not allowed to access a ticket."""
+
+
+class TicketNotAssignedToCurrentUserError(Exception):
+    """Raised when assignment-sensitive work is attempted by a non-assignee."""
+
+
+def create_ticket(
+    db: Session,
+    ticket_data: TicketCreate,
+    requester_id: int,
+) -> Ticket:
+    ticket = Ticket(
+        **ticket_data.model_dump(),
+        requester_id=requester_id,
+    )
 
     try:
         db.add(ticket)
@@ -71,24 +70,37 @@ def get_ticket(db: Session, ticket_id: int) -> Ticket:
     return ticket
 
 
+def get_ticket_for_user(
+    db: Session,
+    ticket_id: int,
+    current_user: User,
+) -> Ticket:
+    ticket = get_ticket(db, ticket_id)
+    if (
+        current_user.role == "employee"
+        and ticket.requester_id != current_user.id
+    ):
+        raise TicketAccessForbiddenError
+    return ticket
+
+
 def create_ticket_note(
     db: Session,
     ticket_id: int,
     author_id: int,
     note_data: TicketNoteCreate,
 ) -> TicketNote:
-    get_ticket(db, ticket_id)
-    author = db.get(User, author_id)
-    if author is None:
-        raise NoteAuthorNotFoundError
-    if author.role != "it_staff":
-        raise InvalidNoteAuthorRoleError
+    ticket = get_ticket(db, ticket_id)
+
+    if ticket.assignee_id != author_id:
+        raise TicketNotAssignedToCurrentUserError
 
     note = TicketNote(
         ticket_id=ticket_id,
-        author_id=author.id,
+        author_id=author_id,
         **note_data.model_dump(),
     )
+
     try:
         db.add(note)
         db.commit()
@@ -103,21 +115,16 @@ def create_ticket_note(
 def claim_ticket(
     db: Session,
     ticket_id: int,
-    claim_data: TicketClaim,
+    assignee_id: int,
 ) -> Ticket:
     ticket = get_ticket(db, ticket_id)
-    assignee = db.get(User, claim_data.assignee_id)
-    if assignee is None:
-        raise AssigneeNotFoundError
-    if assignee.role != "it_staff":
-        raise InvalidAssigneeRoleError
     if (
         ticket.assignee_id is not None
-        and ticket.assignee_id != assignee.id
+        and ticket.assignee_id != assignee_id
     ):
         raise TicketAlreadyAssignedError
 
-    ticket.assignee_id = assignee.id
+    ticket.assignee_id = assignee_id
     if ticket.status != "resolved":
         ticket.status = "in_progress"
 
@@ -131,10 +138,16 @@ def claim_ticket(
     return ticket
 
 
-def resolve_ticket(db: Session, ticket_id: int) -> Ticket:
+def resolve_ticket(
+    db: Session,
+    ticket_id: int,
+    assignee_id: int,
+) -> Ticket:
     ticket = get_ticket(db, ticket_id)
     if ticket.assignee_id is None:
         raise TicketNotClaimedError
+    if ticket.assignee_id != assignee_id:
+        raise TicketNotAssignedToCurrentUserError
 
     if ticket.status == "resolved":
         return ticket

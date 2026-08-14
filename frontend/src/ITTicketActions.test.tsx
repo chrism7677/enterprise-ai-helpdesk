@@ -42,6 +42,7 @@ const assignedTicket: TicketDetailsResponse = {
   created_at: '2026-08-01T13:30:00Z',
   updated_at: '2026-08-02T15:00:00Z',
   notes: [],
+  assigned_to_current_user: true,
 }
 
 const unassignedTicket: TicketDetailsResponse = {
@@ -53,6 +54,7 @@ const unassignedTicket: TicketDetailsResponse = {
 const otherUserTicket: TicketDetailsResponse = {
   ...assignedTicket,
   assignee_id: 3,
+  assigned_to_current_user: false,
 }
 
 const resolvedTicket: TicketDetailsResponse = {
@@ -111,7 +113,7 @@ describe('IT ticket claim action', () => {
     ).not.toBeInTheDocument()
   })
 
-  it('sends the ticket and demo IT staff IDs and refreshes after success', async () => {
+  it('claims as the authenticated IT user and refreshes after success', async () => {
     mockedGetTicket
       .mockResolvedValueOnce(unassignedTicket)
       .mockResolvedValueOnce(assignedTicket)
@@ -122,7 +124,7 @@ describe('IT ticket claim action', () => {
       await screen.findByRole('button', { name: 'Claim ticket' }),
     )
 
-    expect(mockedClaimTicket).toHaveBeenCalledWith(7, 2)
+    expect(mockedClaimTicket).toHaveBeenCalledWith(7)
     expect(await screen.findByLabelText('Add work note')).toBeInTheDocument()
     expect(
       screen.getByRole('button', { name: 'Resolve ticket' }),
@@ -183,7 +185,7 @@ describe('IT work-note action', () => {
     mockedGetTicket.mockResolvedValue(assignedTicket)
   })
 
-  it('shows the note form for a ticket assigned to demo IT staff', async () => {
+  it('shows the note form for a ticket assigned to the current IT user', async () => {
     render(<App />)
 
     expect(await screen.findByLabelText('Add work note')).toBeInTheDocument()
@@ -202,7 +204,7 @@ describe('IT work-note action', () => {
     expect(mockedCreateTicketNote).not.toHaveBeenCalled()
   })
 
-  it('submits a trimmed note with ticket and author IDs', async () => {
+  it('submits a trimmed note without an author ID', async () => {
     mockedCreateTicketNote.mockResolvedValue(createdNote)
     render(<App />)
 
@@ -215,7 +217,6 @@ describe('IT work-note action', () => {
     await waitFor(() => {
       expect(mockedCreateTicketNote).toHaveBeenCalledWith(
         7,
-        2,
         'Rebuilt the local mail profile.',
       )
     })
@@ -275,7 +276,7 @@ describe('IT ticket resolve and ownership actions', () => {
     mockedResolveTicket.mockReset()
   })
 
-  it('shows Resolve for a ticket assigned to demo IT staff', async () => {
+  it('shows Resolve for a ticket assigned to the current IT user', async () => {
     mockedGetTicket.mockResolvedValue(assignedTicket)
     render(<App />)
 

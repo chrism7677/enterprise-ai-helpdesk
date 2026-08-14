@@ -2,6 +2,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 from httpx import AsyncClient
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db.models import Ticket, TicketNote
@@ -31,9 +32,16 @@ async def test_create_ticket_note(
     db_session: Session,
     ticket: Ticket,
 ) -> None:
+    ticket.assignee_id = 2
+    ticket.status = "in_progress"
+    db_session.commit()
+
     response = await it_staff_authenticated_client.post(
         f"/tickets/{ticket.id}/notes",
-        json={"body": "Reset the VPN profile and asked the user to retry."},
+        json={
+            "body": "Reset the VPN profile and asked the user to retry.",
+            "author_id": 3,
+        },
     )
 
     assert response.status_code == 201
@@ -46,6 +54,44 @@ async def test_create_ticket_note(
     persisted_note = db_session.get(TicketNote, created_note["id"])
     assert persisted_note is not None
     assert persisted_note.author_id == 2
+
+
+async def test_create_ticket_note_rejects_different_assignee(
+    it_staff_authenticated_client: AsyncClient,
+    db_session: Session,
+    ticket: Ticket,
+) -> None:
+    ticket.assignee_id = 3
+    ticket.status = "in_progress"
+    db_session.commit()
+
+    response = await it_staff_authenticated_client.post(
+        f"/tickets/{ticket.id}/notes",
+        json={"body": "This note must not be created."},
+    )
+
+    assert response.status_code == 403
+    assert response.json() == {
+        "detail": "Ticket must be assigned to the current IT staff user"
+    }
+    assert db_session.scalars(select(TicketNote)).all() == []
+
+
+async def test_create_ticket_note_rejects_unassigned_ticket(
+    it_staff_authenticated_client: AsyncClient,
+    db_session: Session,
+    ticket: Ticket,
+) -> None:
+    response = await it_staff_authenticated_client.post(
+        f"/tickets/{ticket.id}/notes",
+        json={"body": "This note must not be created."},
+    )
+
+    assert response.status_code == 403
+    assert response.json() == {
+        "detail": "Ticket must be assigned to the current IT staff user"
+    }
+    assert db_session.scalars(select(TicketNote)).all() == []
 
 
 async def test_create_note_for_missing_ticket(
@@ -133,7 +179,6 @@ async def test_claim_ticket_persists_assignee_and_status(
 ) -> None:
     response = await it_staff_authenticated_client.patch(
         f"/tickets/{ticket.id}/claim",
-        json={"assignee_id": 2},
     )
 
     assert response.status_code == 200
@@ -151,15 +196,15 @@ async def test_claim_missing_ticket(
 ) -> None:
     response = await it_staff_authenticated_client.patch(
         "/tickets/999/claim",
-        json={"assignee_id": 2},
     )
 
     assert response.status_code == 404
     assert response.json() == {"detail": "Ticket not found"}
 
 
-async def test_claim_with_missing_assignee(
+async def test_claim_ignores_client_supplied_assignee_id(
     it_staff_authenticated_client: AsyncClient,
+    db_session: Session,
     ticket: Ticket,
 ) -> None:
     response = await it_staff_authenticated_client.patch(
@@ -167,23 +212,10 @@ async def test_claim_with_missing_assignee(
         json={"assignee_id": 999},
     )
 
-    assert response.status_code == 404
-    assert response.json() == {"detail": "Assignee not found"}
-
-
-async def test_claim_rejects_employee(
-    it_staff_authenticated_client: AsyncClient,
-    ticket: Ticket,
-) -> None:
-    response = await it_staff_authenticated_client.patch(
-        f"/tickets/{ticket.id}/claim",
-        json={"assignee_id": 1},
-    )
-
-    assert response.status_code == 400
-    assert response.json() == {
-        "detail": "Assignee must be an IT staff user"
-    }
+    assert response.status_code == 200
+    assert response.json()["assignee_id"] == 2
+    db_session.refresh(ticket)
+    assert ticket.assignee_id == 2
 
 
 async def test_claim_rejects_different_assignee(
@@ -197,7 +229,6 @@ async def test_claim_rejects_different_assignee(
 
     response = await it_staff_authenticated_client.patch(
         f"/tickets/{ticket.id}/claim",
-        json={"assignee_id": 2},
     )
 
     assert response.status_code == 409
@@ -221,7 +252,6 @@ async def test_repeated_claim_by_same_assignee_is_idempotent(
 
     response = await it_staff_authenticated_client.patch(
         f"/tickets/{ticket.id}/claim",
-        json={"assignee_id": 2},
     )
 
     assert response.status_code == 200

@@ -71,20 +71,15 @@ export async function createTicket(
   )
 }
 
-export async function getTicketsByRequester(
-  requesterId: number,
-): Promise<TicketResponse[]> {
-  const query = new URLSearchParams({ requester_id: String(requesterId) })
+export async function getMyTickets(): Promise<TicketResponse[]> {
   return requestJson<TicketResponse[]>(
-    `/tickets?${query.toString()}`,
+    '/tickets',
     'Could not load tickets.',
   )
 }
 
-export async function getTicketsByAssignee(
-  assigneeId: number,
-): Promise<TicketResponse[]> {
-  const query = new URLSearchParams({ assignee_id: String(assigneeId) })
+export async function getMyAssignedTickets(): Promise<TicketResponse[]> {
+  const query = new URLSearchParams({ assigned_to_me: 'true' })
   return requestJson<TicketResponse[]>(
     `/tickets?${query.toString()}`,
     'Could not load assigned tickets.',
@@ -110,28 +105,20 @@ export async function getTicket(
 
 export async function claimTicket(
   ticketId: number,
-  assigneeId: number,
 ): Promise<TicketResponse> {
   return requestJson<TicketResponse>(
     `/tickets/${encodeURIComponent(String(ticketId))}/claim`,
     'Could not claim this ticket.',
     {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ assignee_id: assigneeId }),
     },
   )
 }
 
 export async function createTicketNote(
   ticketId: number,
-  authorId: number,
   body: string,
 ): Promise<WorkNoteResponse> {
-  // The backend derives the demo author today; retaining this argument keeps
-  // the caller ready for the authenticated-user contract that will replace it.
-  void authorId
-
   return requestJson<WorkNoteResponse>(
     `/tickets/${encodeURIComponent(String(ticketId))}/notes`,
     'Could not add the work note.',

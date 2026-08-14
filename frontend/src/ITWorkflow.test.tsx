@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
 import {
   getTicket,
-  getTicketsByAssignee,
+  getMyAssignedTickets,
   getUnassignedTickets,
 } from './api/tickets'
 import type { TicketDetailsResponse, TicketResponse } from './types/ticket'
@@ -14,13 +14,13 @@ vi.mock('./api/tickets', async (importOriginal) => {
   return {
     ...actual,
     getTicket: vi.fn(),
-    getTicketsByAssignee: vi.fn(),
+    getMyAssignedTickets: vi.fn(),
     getUnassignedTickets: vi.fn(),
   }
 })
 
 const mockedGetTicket = vi.mocked(getTicket)
-const mockedGetAssignedTickets = vi.mocked(getTicketsByAssignee)
+const mockedGetAssignedTickets = vi.mocked(getMyAssignedTickets)
 const mockedGetUnassignedTickets = vi.mocked(getUnassignedTickets)
 
 const assignedTicket: TicketResponse = {
@@ -46,6 +46,7 @@ const unassignedTicket: TicketResponse = {
 
 const ticketWithNotes: TicketDetailsResponse = {
   ...assignedTicket,
+  assigned_to_current_user: true,
   notes: [
     {
       id: 10,
@@ -69,14 +70,14 @@ describe('IT assigned tickets', () => {
     resetMocks()
   })
 
-  it('requests demo IT staff user 2 and displays loading', () => {
+  it('requests tickets assigned to the authenticated IT user and displays loading', () => {
     mockedGetAssignedTickets.mockReturnValue(new Promise(() => {}))
     render(<App />)
 
     expect(screen.getByRole('status')).toHaveTextContent(
       'Loading assigned tickets...',
     )
-    expect(mockedGetAssignedTickets).toHaveBeenCalledWith(2)
+    expect(mockedGetAssignedTickets).toHaveBeenCalledWith()
   })
 
   it('renders assigned tickets with IT details links', async () => {

@@ -79,6 +79,23 @@ After implementation:
 Do not report a command as passing unless you actually ran it. Report every command actually run and its result. If a command hangs or fails, report the exact point and error.
 
 
+## Test execution on Windows / Codex
+
+Run the backend test suite with:
+
+pytest -v
+
+Known Codex environment issue:
+FastAPI/AnyIO tests may hang when executed inside the restricted Windows
+sandbox because AnyIO worker-thread execution can be blocked.
+
+If a sandboxed pytest run hangs:
+1. Do not modify application or test code solely to work around the sandbox.
+2. Confirm the issue with a minimal AnyIO/FastAPI reproduction if needed.
+3. Re-run the test command outside the sandbox with approval.
+4. Report clearly whether results came from sandboxed or non-sandboxed execution.
+
+
 ## Response format
 Provide:
 - a concise summary of the implementation

@@ -62,6 +62,13 @@ def db_session() -> Generator[Session, None, None]:
                     password_hash="not-used-in-api-tests",
                     role="it_staff",
                 ),
+                User(
+                    id=4,
+                    email="other.employee@example.com",
+                    name="Other Employee",
+                    password_hash="not-used-in-api-tests",
+                    role="employee",
+                ),
             ]
         )
         session.commit()
@@ -132,6 +139,21 @@ async def it_staff_authenticated_client(
 ) -> AsyncGenerator[AsyncClient, None]:
     async def override_current_user() -> User:
         user = db_session.get(User, 2)
+        assert user is not None
+        return user
+
+    app.dependency_overrides[get_current_user] = override_current_user
+    yield client
+    app.dependency_overrides.pop(get_current_user, None)
+
+
+@pytest.fixture
+async def other_employee_authenticated_client(
+    client: AsyncClient,
+    db_session: Session,
+) -> AsyncGenerator[AsyncClient, None]:
+    async def override_current_user() -> User:
+        user = db_session.get(User, 4)
         assert user is not None
         return user
 

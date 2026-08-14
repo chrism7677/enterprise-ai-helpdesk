@@ -33,6 +33,22 @@ def seed_users() -> None:
                         ),
                         role="it_staff",
                     ),
+                    User(
+                        email="demohr@example.com",
+                        name="Demo HR",
+                        password_hash=password_hash.hash(
+                            "HRPassword123!"
+                        ),
+                        role="employee",
+                    ),
+                    User(
+                        email="desktopsupport@example.com",
+                        name="Demo Desktop Support",
+                        password_hash=password_hash.hash(
+                            "DSPassword123!"
+                        ),
+                        role="it_staff",
+                    ),
                 ]
             )
 

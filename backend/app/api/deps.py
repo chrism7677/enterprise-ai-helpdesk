@@ -53,3 +53,7 @@ def require_it_staff(current_user: CurrentUser) -> User:
             detail="IT staff role required",
         )
     return current_user
+
+
+EmployeeUser = Annotated[User, Depends(require_employee)]
+ITStaffUser = Annotated[User, Depends(require_it_staff)]

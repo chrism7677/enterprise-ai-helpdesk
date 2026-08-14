@@ -9,11 +9,6 @@ class TicketCreate(BaseModel):
     description: str = Field(min_length=1)
     category: Literal["hardware", "software", "network", "access", "other"]
     priority: Literal["low", "medium", "high"] = "medium"
-    requester_id: int = Field(gt=0)
-
-
-class TicketClaim(BaseModel):
-    assignee_id: int = Field(gt=0)
 
 
 class TicketNoteCreate(BaseModel):
@@ -54,3 +49,4 @@ class TicketResponse(BaseModel):
 
 class TicketDetailResponse(TicketResponse):
     notes: list[TicketNoteResponse]
+    assigned_to_current_user: bool

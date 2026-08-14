@@ -14,7 +14,6 @@ export interface TicketCreateRequest {
   description: string
   category: TicketCategory
   priority: TicketPriority
-  requester_id: number
 }
 
 export interface TicketResponse {
@@ -40,4 +39,5 @@ export interface WorkNoteResponse {
 
 export interface TicketDetailsResponse extends TicketResponse {
   notes: WorkNoteResponse[]
+  assigned_to_current_user: boolean
 }

@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { claimTicket, resolveTicket } from '../api/tickets'
-import { DEMO_IT_STAFF_ID } from '../config'
 import type { TicketDetailsResponse } from '../types/ticket'
 import { AddWorkNoteForm } from './AddWorkNoteForm'
 
@@ -26,7 +25,7 @@ export function ITTicketActions({
     setClaimError(null)
     setIsClaiming(true)
     try {
-      await claimTicket(ticket.id, DEMO_IT_STAFF_ID)
+      await claimTicket(ticket.id)
       await onTicketChanged()
     } catch (requestError: unknown) {
       setClaimError(
@@ -91,7 +90,7 @@ export function ITTicketActions({
     )
   }
 
-  if (ticket.assignee_id !== DEMO_IT_STAFF_ID) {
+  if (!ticket.assigned_to_current_user) {
     return (
       <section className="ticket-actions" aria-labelledby="ticket-actions-heading">
         <h2 id="ticket-actions-heading">Ticket actions</h2>
@@ -105,7 +104,6 @@ export function ITTicketActions({
       <h2 id="ticket-actions-heading">Ticket actions</h2>
       <AddWorkNoteForm
         ticketId={ticket.id}
-        authorId={DEMO_IT_STAFF_ID}
         onNoteCreated={onTicketChanged}
       />
       <div className="resolve-action">

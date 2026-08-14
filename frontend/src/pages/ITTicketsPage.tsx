@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { getTicketsByAssignee } from '../api/tickets'
+import { getMyAssignedTickets } from '../api/tickets'
 import { TicketList } from '../components/TicketList'
-import { DEMO_IT_STAFF_ID } from '../config'
 import type { TicketResponse } from '../types/ticket'
 
 export function ITTicketsPage() {
@@ -20,7 +19,7 @@ export function ITTicketsPage() {
   useEffect(() => {
     let isCancelled = false
 
-    getTicketsByAssignee(DEMO_IT_STAFF_ID)
+    getMyAssignedTickets()
       .then((loadedTickets) => {
         if (!isCancelled) {
           setTickets(loadedTickets)

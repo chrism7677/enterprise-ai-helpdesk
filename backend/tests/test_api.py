@@ -43,7 +43,6 @@ async def test_create_ticket_and_retrieve_it(
         "description": "The VPN client times out during connection.",
         "category": "network",
         "priority": "high",
-        "requester_id": 1,
     }
 
     create_response = await authenticated_client.post(
@@ -54,10 +53,9 @@ async def test_create_ticket_and_retrieve_it(
     created_ticket = create_response.json()
     assert created_ticket["id"] == 1
     assert created_ticket["status"] == "open"
+    assert created_ticket["requester_id"] == 1
     assert created_ticket["assignee_id"] is None
-    assert {
-        key: created_ticket[key] for key in request_body
-    } == request_body
+    assert {key: created_ticket[key] for key in request_body} == request_body
 
     queue_response = await authenticated_client.get("/tickets")
 
@@ -74,14 +72,13 @@ async def test_create_ticket_rejects_invalid_data(
             "title": "",
             "description": "A description",
             "category": "invalid-category",
-            "requester_id": 1,
         },
     )
 
     assert response.status_code == 422
 
 
-async def test_create_ticket_rejects_unknown_requester(
+async def test_create_ticket_ignores_client_supplied_requester_id(
     authenticated_client: AsyncClient,
 ) -> None:
     response = await authenticated_client.post(
@@ -91,16 +88,16 @@ async def test_create_ticket_rejects_unknown_requester(
             "description": "The VPN client times out during connection.",
             "category": "network",
             "priority": "high",
-            "requester_id": 999,
+            "requester_id": 4,
         },
     )
 
-    assert response.status_code == 404
-    assert response.json() == {"detail": "Requester not found"}
+    assert response.status_code == 201
+    assert response.json()["requester_id"] == 1
 
 
 async def test_ticket_queue_can_be_filtered_by_requester(
-    authenticated_client: AsyncClient,
+    it_staff_authenticated_client: AsyncClient,
     db_session: Session,
 ) -> None:
     db_session.add_all(
@@ -123,8 +120,8 @@ async def test_ticket_queue_can_be_filtered_by_requester(
     )
     db_session.commit()
 
-    unfiltered_response = await authenticated_client.get("/tickets")
-    filtered_response = await authenticated_client.get(
+    unfiltered_response = await it_staff_authenticated_client.get("/tickets")
+    filtered_response = await it_staff_authenticated_client.get(
         "/tickets", params={"requester_id": 1}
     )
 
@@ -140,7 +137,7 @@ async def test_ticket_queue_can_be_filtered_by_requester(
 
 
 async def test_ticket_queue_assignment_filters(
-    authenticated_client: AsyncClient,
+    it_staff_authenticated_client: AsyncClient,
     db_session: Session,
 ) -> None:
     tickets = [
@@ -173,14 +170,14 @@ async def test_ticket_queue_assignment_filters(
     for ticket in tickets:
         db_session.refresh(ticket)
 
-    unfiltered_response = await authenticated_client.get("/tickets")
-    requester_response = await authenticated_client.get(
+    unfiltered_response = await it_staff_authenticated_client.get("/tickets")
+    requester_response = await it_staff_authenticated_client.get(
         "/tickets", params={"requester_id": 1}
     )
-    assignee_response = await authenticated_client.get(
+    assignee_response = await it_staff_authenticated_client.get(
         "/tickets", params={"assignee_id": 2}
     )
-    unassigned_response = await authenticated_client.get(
+    unassigned_response = await it_staff_authenticated_client.get(
         "/tickets", params={"unassigned": "true"}
     )
 
@@ -204,9 +201,9 @@ async def test_ticket_queue_assignment_filters(
 
 
 async def test_ticket_queue_rejects_conflicting_assignment_filters(
-    authenticated_client: AsyncClient,
+    it_staff_authenticated_client: AsyncClient,
 ) -> None:
-    response = await authenticated_client.get(
+    response = await it_staff_authenticated_client.get(
         "/tickets",
         params={"assignee_id": 2, "unassigned": "true"},
     )
@@ -218,9 +215,9 @@ async def test_ticket_queue_rejects_conflicting_assignment_filters(
 
 
 async def test_ticket_queue_filtered_empty_result(
-    authenticated_client: AsyncClient,
+    it_staff_authenticated_client: AsyncClient,
 ) -> None:
-    response = await authenticated_client.get(
+    response = await it_staff_authenticated_client.get(
         "/tickets", params={"assignee_id": 999}
     )
 

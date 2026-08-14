@@ -1,5 +1,4 @@
 import { useState, type FormEvent } from 'react'
-import { DEMO_EMPLOYEE_ID } from '../config'
 import type {
   TicketCategory,
   TicketCreateRequest,
@@ -94,7 +93,6 @@ export function TicketForm({ onSubmit, isSubmitting }: TicketFormProps) {
       description: values.description.trim(),
       category: values.category,
       priority: values.priority,
-      requester_id: DEMO_EMPLOYEE_ID,
     })
     if (createdTicket) {
       setValues(INITIAL_VALUES)

@@ -3,13 +3,11 @@ import { createTicketNote } from '../api/tickets'
 
 export interface AddWorkNoteFormProps {
   ticketId: number
-  authorId: number
   onNoteCreated: () => Promise<void>
 }
 
 export function AddWorkNoteForm({
   ticketId,
-  authorId,
   onNoteCreated,
 }: AddWorkNoteFormProps) {
   const [body, setBody] = useState('')
@@ -34,7 +32,7 @@ export function AddWorkNoteForm({
     setIsSubmitting(true)
 
     try {
-      await createTicketNote(ticketId, authorId, trimmedBody)
+      await createTicketNote(ticketId, trimmedBody)
       await onNoteCreated()
       setBody('')
     } catch (requestError: unknown) {

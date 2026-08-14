@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
-import { getTicket, getTicketsByRequester, TicketApiError } from './api/tickets'
+import { getMyTickets, getTicket, TicketApiError } from './api/tickets'
 import type { TicketDetailsResponse, TicketResponse } from './types/ticket'
 
 vi.mock('./api/tickets', async (importOriginal) => {
@@ -11,12 +11,12 @@ vi.mock('./api/tickets', async (importOriginal) => {
     ...actual,
     createTicket: vi.fn(),
     getTicket: vi.fn(),
-    getTicketsByRequester: vi.fn(),
+    getMyTickets: vi.fn(),
   }
 })
 
 const mockedGetTicket = vi.mocked(getTicket)
-const mockedGetTickets = vi.mocked(getTicketsByRequester)
+const mockedGetTickets = vi.mocked(getMyTickets)
 
 const ticket: TicketResponse = {
   id: 7,
@@ -33,6 +33,7 @@ const ticket: TicketResponse = {
 
 const ticketWithNotes: TicketDetailsResponse = {
   ...ticket,
+  assigned_to_current_user: false,
   notes: [
     {
       id: 10,
@@ -63,7 +64,7 @@ describe('employee ticket list', () => {
     render(<App />)
 
     expect(screen.getByRole('status')).toHaveTextContent('Loading tickets...')
-    expect(mockedGetTickets).toHaveBeenCalledWith(1)
+    expect(mockedGetTickets).toHaveBeenCalledWith()
   })
 
   it('renders tickets returned by the API', async () => {

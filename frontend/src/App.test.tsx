@@ -71,7 +71,6 @@ describe('employee ticket creation', () => {
       description: 'The VPN client times out.',
       category: 'network',
       priority: 'high',
-      requester_id: 1,
     })
     expect(await screen.findByText(/Ticket #42 is open/)).toBeInTheDocument()
     expect(screen.getByLabelText('Title')).toHaveValue('')

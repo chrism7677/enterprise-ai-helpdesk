@@ -28,7 +28,7 @@ async def test_it_staff_cannot_create_ticket(
     ("method", "path_suffix", "request_body"),
     [
         ("POST", "/notes", {"body": "Investigating the issue."}),
-        ("PATCH", "/claim", {"assignee_id": 2}),
+        ("PATCH", "/claim", None),
         ("PATCH", "/resolve", None),
     ],
 )
