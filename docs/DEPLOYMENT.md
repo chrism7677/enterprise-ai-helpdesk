@@ -67,7 +67,7 @@ VITE_API_BASE_URL=http://localhost:8000
 
 ### Production
 
-Stage B will add a separate production Compose definition:
+Production uses a separate Compose definition:
 
 ```text
 compose.prod.yaml
@@ -81,23 +81,25 @@ It should contain three Helpdesk services:
 
 Do not replace the existing development Compose file with the production definition.
 
-## Planned Production Repository Files
+## Production Repository Files
 
-Stage B should create or finalize the following deployment files:
+The production deployment is defined by:
 
 ```text
+.env.production.example
 .github/workflows/ci.yml
 .github/workflows/deploy.yml
 backend/Dockerfile
 backend/.dockerignore
+backend/requirements.txt
+backend/requirements-dev.txt
 frontend/Dockerfile
 frontend/.dockerignore
+frontend/nginx.conf
 compose.prod.yaml
 deploy.sh
 deploy/nginx/helpdesk.conf
 ```
-
-A Python dependency manifest required to build the backend image must also exist, using the dependency-management approach selected for the project.
 
 ## Docker Requirements
 
@@ -154,7 +156,7 @@ Recommended permissions:
 chmod 600 .env.production
 ```
 
-The exact Compose integration will be implemented during Stage B, for example with:
+Compose reads production values with:
 
 ```bash
 docker compose --env-file .env.production -f compose.prod.yaml ...
@@ -195,6 +197,20 @@ VITE_ENTRA_API_SCOPE
 ```
 
 `VITE_*` values are browser-visible configuration and must never contain secrets.
+
+The signed-out demo page also accepts optional browser-visible build values:
+
+```text
+VITE_DEMO_EMPLOYEE_USERNAME
+VITE_DEMO_EMPLOYEE_PASSWORD
+VITE_DEMO_IT_STAFF_USERNAME
+VITE_DEMO_IT_STAFF_PASSWORD
+```
+
+These values are intentionally public demo credentials, not confidential
+application credentials. They are supplied only on the production host and are
+not committed. If omitted, the signed-out page remains usable and reports that
+demo credentials are not configured in that build.
 
 ## Microsoft Entra ID
 
@@ -489,7 +505,10 @@ SSM SendCommand
 EC2 SSM Agent
       |
       v
-deploy.sh APP_DIR + DEPLOY_REF
+ubuntu bootstrap: fetch + checkout exact DEPLOY_REF
+      |
+      v
+tagged deploy.sh: re-verify APP_DIR + DEPLOY_REF
       |
       v
 Docker Compose production deployment
@@ -504,9 +523,15 @@ DEPLOY_REF=${github.ref_name}
 
 to the EC2 deployment command.
 
+The SSM command runs a bootstrap under the `ubuntu` user so Git uses that
+user's repository ownership and SSH configuration. The bootstrap validates the
+`demo-*` restriction, fetches the requested tag, verifies its exact commit, and
+checks it out before invoking the `deploy.sh` contained in that release. The
+script repeats those checks as defense in depth.
+
 ## `deploy.sh` Requirements
 
-The production deploy script should:
+The production deploy script:
 
 1. Exit on errors.
 2. Change to `APP_DIR`.

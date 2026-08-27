@@ -67,6 +67,14 @@ describe('protected and role-aware routing', () => {
       expect(window.location.pathname).toBe('/')
       expect(screen.queryByText('Employee tickets page')).not.toBeInTheDocument()
       expect(screen.queryByText('IT tickets page')).not.toBeInTheDocument()
+      expect(screen.getByRole('heading', { name: 'Live demo access' })).toBeInTheDocument()
+      expect(screen.getByRole('heading', { name: 'Employee demo identity' })).toBeInTheDocument()
+      expect(screen.getByRole('heading', { name: 'IT Staff demo identity' })).toBeInTheDocument()
+      expect(
+        screen.getByText(
+          /Do not enter real personal, confidential, or sensitive information/,
+        ),
+      ).toBeInTheDocument()
     },
   )
 

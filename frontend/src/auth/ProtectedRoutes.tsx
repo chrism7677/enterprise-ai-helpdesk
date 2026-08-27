@@ -1,5 +1,6 @@
 import { Navigate, Outlet } from 'react-router-dom'
 import type { ApplicationRole } from '../api/currentUser'
+import { DemoAccessInstructions } from '../components/DemoAccessInstructions'
 import { useApplicationAuth, type ApplicationAuthState } from './ApplicationAuthContext'
 import { roleHomePath } from './roles'
 
@@ -57,6 +58,7 @@ export function AuthenticatedHome() {
         <p className="eyebrow">Enterprise AI Helpdesk</p>
         <h1>Sign in to continue</h1>
         <p>Use your Microsoft account to access your helpdesk workspace.</p>
+        <DemoAccessInstructions />
       </main>
     )
   }

@@ -372,9 +372,9 @@ flowchart TD
     STS --> Role["GitHubActionsHelpdeskDeployRole"]
     Role --> SSM["SSM SendCommand"]
     SSM --> Agent["EC2 SSM Agent"]
-    Agent --> Script["deploy.sh"]
-    Script --> Checkout["Checkout exact DEPLOY_REF tag"]
-    Checkout --> Compose["Build / migrate / update compose.prod.yaml"]
+    Agent --> Bootstrap["Run as ubuntu<br/>checkout exact DEPLOY_REF tag"]
+    Bootstrap --> Script["Tagged deploy.sh<br/>re-verifies exact release"]
+    Script --> Compose["Build / migrate / update compose.prod.yaml"]
     Compose --> Verify["Health and live-demo verification"]
 ```
 
@@ -405,7 +405,7 @@ The workflow requests a short-lived GitHub OIDC token, AWS STS validates the tru
 
 ### Remote execution
 
-GitHub Actions does not SSH into the instance for deployment. It calls AWS Systems Manager Run Command. The EC2 SSM Agent receives the command and invokes `deploy.sh` locally.
+GitHub Actions does not SSH into the instance for deployment. It calls AWS Systems Manager Run Command. The EC2 SSM Agent runs a small bootstrap under the `ubuntu` user that fetches and checks out the exact release tag before invoking that tag's `deploy.sh`. The script then repeats the tag and commit verification as defense in depth.
 
 While the GitHub repository remains private, `deploy.sh`/Git on EC2 uses a repository-specific read-only SSH Deploy Key to fetch the selected release tag.
 

@@ -39,7 +39,8 @@ Avoid moving files unless necessary to accomplish the requested task.
 
 ## Scope constraints
 Do not:
-- add Docker or deployment changes
+- add Docker or deployment changes during ordinary feature work unless the user
+  explicitly requests deployment or infrastructure work
 - add AI, RAG, vector search, agents, or external API calls
 - redesign the entire project structure
 - rename unrelated modules
@@ -116,4 +117,3 @@ Provide:
 - If verification fails, explain exactly why rather than claiming success.
 
 Do not merely describe code that should be written. Implement it and verify it.
-
