@@ -5,6 +5,7 @@ const acquireFastApiAccessToken = vi.hoisted(() => vi.fn())
 vi.mock('../auth/accessToken', () => ({ acquireFastApiAccessToken }))
 
 import { authenticatedFetch } from './client'
+import { API_BASE_URL } from '../config'
 
 describe('authenticatedFetch', () => {
   const fetchMock = vi.fn()
@@ -26,7 +27,7 @@ describe('authenticatedFetch', () => {
     expect(fetchMock).toHaveBeenCalledOnce()
     const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit]
     const headers = new Headers(init.headers)
-    expect(url).toBe('http://localhost:8000/tickets')
+    expect(url).toBe(`${API_BASE_URL}/tickets`)
     expect(headers.get('Authorization')).toBe('Bearer api-access-token')
     expect(headers.get('Content-Type')).toBe('application/json')
   })

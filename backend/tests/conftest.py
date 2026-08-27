@@ -7,9 +7,9 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
-# Required application identifiers are replaced at the validator boundary in
-# authentication tests; setting them here keeps all tests independent of a
-# developer's local .env file.
+# Required application settings are replaced at their test boundaries; setting
+# them here keeps test collection independent of a developer's local .env file.
+os.environ.setdefault("DATABASE_URL", "sqlite://")
 os.environ.setdefault(
     "ENTRA_TENANT_ID", "35aec465-2e0e-4877-8f10-e8d341af772c"
 )
