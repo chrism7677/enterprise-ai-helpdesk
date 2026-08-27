@@ -96,6 +96,14 @@ If a sandboxed pytest run hangs:
 4. Report clearly whether results came from sandboxed or non-sandboxed execution.
 
 
+## Deployment and Infrastructure-related files
+Before modifying deployment or infrastructure-related files,
+read ARCHITECTURE.md and docs/DEPLOYMENT.md.
+
+Production deploys only from demo-* release tags.
+Normal pushes to main must never deploy production.
+
+
 ## Response format
 Provide:
 - a concise summary of the implementation
@@ -108,3 +116,4 @@ Provide:
 - If verification fails, explain exactly why rather than claiming success.
 
 Do not merely describe code that should be written. Implement it and verify it.
+

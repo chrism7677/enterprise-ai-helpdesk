@@ -48,6 +48,6 @@ export async function acquireFastApiAccessToken(): Promise<string> {
 
     // A real redirect unloads this page. This protects callers if navigation
     // is prevented so they never send a request without a valid access token.
-    throw new TokenRedirectStartedError()
+    throw new TokenRedirectStartedError() //fallback guard in case the redirect is prevented
   }
 }
