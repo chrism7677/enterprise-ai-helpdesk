@@ -127,6 +127,9 @@ wait_for_health db 120
 echo "Applying pending Alembic migrations..."
 "${compose[@]}" run --rm --no-deps backend alembic upgrade head
 
+echo "Seeding required application users..."
+"${compose[@]}" run --rm --no-deps backend python -m scripts.seed
+
 echo "Starting application services..."
 "${compose[@]}" up -d --no-deps backend frontend
 wait_for_health backend 120
