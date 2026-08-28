@@ -175,7 +175,7 @@ jobs:
           deploy_ref_payload="$(printf '%s' "$DEPLOY_REF" | base64 --wrap=0)"
 
           printf -v remote_command \
-            "printf '%%s' '%s' | sudo -u ubuntu -H env APP_DIR_B64='%s' DEPLOY_REF_B64='%s' bash" \
+            "printf '%%s' '%s' | base64 --decode | sudo -u ubuntu -H env APP_DIR_B64='%s' DEPLOY_REF_B64='%s' bash" \
             "$bootstrap_payload" \
             "$app_dir_payload" \
             "$deploy_ref_payload"
