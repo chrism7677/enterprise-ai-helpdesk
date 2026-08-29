@@ -1,5 +1,5 @@
 ## Project overview and structure
-This repository is an early-stage Enterprise AI Helpdesk portfolio project.
+This repository is an Enterprise AI Helpdesk portfolio project.
 
 Current technology stack:
 - React with Vite and TypeScript
